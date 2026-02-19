@@ -23,15 +23,15 @@
 <div align="center">
   <table>
     <tr>
-      <td align="center"><b>Main Popup</b><br><img src="screenshots/1.png" width="250"/></td>
-      <td align="center"><b>Azkar List</b><br><img src="screenshots/2.png" width="250"/></td>
+      <td align="center"><br><img src="screenshots/1.png" width="250"/></td>
+      <td align="center"><br><img src="screenshots/2.png" width="250"/></td>
     </tr>
     <tr>
-      <td align="center"><b>Prayer Times</b><br><img src="screenshots/3.png" width="250"/></td>
-      <td align="center"><b>Settings</b><br><img src="screenshots/4.png" width="250"/></td>
+      <td align="center"><br><img src="screenshots/3.png" width="250"/></td>
+      <td align="center"><br><img src="screenshots/4.png" width="250"/></td>
     </tr>
     <tr>
-      <td colspan="2" align="center"><b>Notification Overlay</b><br><img src="screenshots/5.png" width="515"/></td>
+      <td colspan="2" align="center"><br><img src="screenshots/5.png" width="515"/></td>
     </tr>
   </table>
 </div>
@@ -47,3 +47,4 @@
 2.  Open **Chrome** and go to `chrome://extensions/`.
 3.  Enable **Developer mode** (top-right).
 4.  Click **Load unpacked** and select the project folder.
+
