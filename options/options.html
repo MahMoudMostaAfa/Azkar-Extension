@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>إعدادات أذكار المسلم - Azkar Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="settings-container">
+      <header class="settings-header">
+        <h1>⚙️ إعدادات أذكار المسلم</h1>
+        <p class="subtitle">Azkar Extension Settings</p>
+      </header>
+
+      <main class="settings-main">
+        <!-- General Settings -->
+        <section class="settings-section">
+          <h2>🔧 إعدادات عامة | General Settings</h2>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🔔 تفعيل التذكير التلقائي</label>
+              <span class="setting-desc">Enable automatic azkar reminders</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="enableReminder" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>⏱️ فترة التذكير</label>
+              <span class="setting-desc">How often should azkar appear</span>
+            </div>
+            <select id="interval">
+              <option value="2">كل ٢ دقائق</option>
+              <option value="5">كل ٥ دقائق</option>
+              <option value="10">كل ١٠ دقائق</option>
+              <option value="15">كل ١٥ دقيقة</option>
+              <option value="30" selected>كل ٣٠ دقيقة</option>
+              <option value="60">كل ساعة</option>
+              <option value="120">كل ساعتين</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>⏳ مدة ظهور الإشعار</label>
+              <span class="setting-desc"
+                >Popup notification duration (seconds)</span
+              >
+            </div>
+            <select id="popupDuration">
+              <option value="10">١٠ ثوانٍ</option>
+              <option value="15" selected>١٥ ثانية</option>
+              <option value="20">٢٠ ثانية</option>
+              <option value="30">٣٠ ثانية</option>
+              <option value="60">دقيقة</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>📍 موقع الإشعار</label>
+              <span class="setting-desc">Where should the popup appear</span>
+            </div>
+            <select id="popupPosition">
+              <option value="top-right" selected>أعلى اليمين</option>
+              <option value="top-left">أعلى اليسار</option>
+              <option value="bottom-right">أسفل اليمين</option>
+              <option value="bottom-left">أسفل اليسار</option>
+              <option value="center">الوسط</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- Appearance -->
+        <section class="settings-section">
+          <h2>🎨 المظهر | Appearance</h2>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🌗 الثيم</label>
+              <span class="setting-desc">Light, Dark, or Auto</span>
+            </div>
+            <select id="theme">
+              <option value="light">فاتح (Light)</option>
+              <option value="dark">داكن (Dark)</option>
+              <option value="auto" selected>تلقائي (Auto)</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🔤 حجم الخط</label>
+              <span class="setting-desc">Arabic text font size</span>
+            </div>
+            <select id="fontSize">
+              <option value="small">صغير (Small)</option>
+              <option value="medium" selected>متوسط (Medium)</option>
+              <option value="large">كبير (Large)</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🌍 اللغة</label>
+              <span class="setting-desc">Interface language</span>
+            </div>
+            <select id="language">
+              <option value="ar" selected>العربية</option>
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+              <option value="ur">اردو</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- Display Options -->
+        <section class="settings-section">
+          <h2>👁️ خيارات العرض | Display Options</h2>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>📝 إظهار النطق (Transliteration)</label>
+              <span class="setting-desc"
+                >Show Latin transliteration of Arabic text</span
+              >
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="showTransliteration" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🌐 إظهار الترجمة</label>
+              <span class="setting-desc"
+                >Show translation in your selected language</span
+              >
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="showTranslation" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>📖 إظهار المصدر</label>
+              <span class="setting-desc"
+                >Show hadith/quran source reference</span
+              >
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="showSource" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🔊 تفعيل الصوت</label>
+              <span class="setting-desc">Enable audio recitation</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="audioEnabled" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🔔 صوت الإشعار</label>
+              <span class="setting-desc">Play sound with notification</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="notificationSound" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Azkar Categories Selection -->
+        <section class="settings-section">
+          <h2>📂 التصنيفات المفعّلة | Enabled Categories</h2>
+          <p class="section-desc">
+            Select which categories of azkar to include in reminders
+          </p>
+
+          <div class="categories-list" id="categoriesList">
+            <!-- Generated dynamically -->
+          </div>
+        </section>
+
+        <!-- Location Settings (for accurate prayer times) -->
+        <section class="settings-section">
+          <h2>📍 الموقع | Location</h2>
+          <p class="section-desc">
+            Set your location for accurate prayer times from Aladhan API
+          </p>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🌍 تحديد الموقع تلقائياً</label>
+              <span class="setting-desc"
+                >Auto-detect using browser geolocation</span
+              >
+            </div>
+            <button id="detectLocationBtn" class="action-btn small">
+              📡 تحديد الموقع
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>خط العرض (Latitude)</label>
+            </div>
+            <input
+              type="number"
+              id="latitude"
+              step="0.0001"
+              placeholder="21.4225"
+              class="input-field"
+            />
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>خط الطول (Longitude)</label>
+            </div>
+            <input
+              type="number"
+              id="longitude"
+              step="0.0001"
+              placeholder="39.8262"
+              class="input-field"
+            />
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>📐 طريقة الحساب</label>
+              <span class="setting-desc"
+                >Calculation method for prayer times</span
+              >
+            </div>
+            <select id="calcMethod">
+              <option value="0">Jafari / الشيعة</option>
+              <option value="1">University of Islamic Sciences, Karachi</option>
+              <option value="2">Islamic Society of North America (ISNA)</option>
+              <option value="3">Muslim World League (MWL)</option>
+              <option value="4" selected>Umm Al-Qura University, Makkah</option>
+              <option value="5">Egyptian General Authority</option>
+              <option value="7">Institute of Geophysics, Tehran</option>
+              <option value="8">Gulf Region</option>
+              <option value="9">Kuwait</option>
+              <option value="10">Qatar</option>
+              <option value="11">Majlis Ugama Islam Singapura</option>
+              <option value="12">UOIF (France)</option>
+              <option value="13">Diyanet İşleri Başkanlığı (Turkey)</option>
+              <option value="14">
+                Spiritual Administration of Muslims, Russia
+              </option>
+              <option value="15">Moonsighting Committee</option>
+            </select>
+          </div>
+
+          <div id="locationStatus" class="location-status"></div>
+          <div id="prayerTimesPreview" class="prayer-times-preview"></div>
+        </section>
+
+        <!-- Prayer Reminders -->
+        <section class="settings-section">
+          <h2>🕌 تذكير بالصلاة | Prayer Reminders</h2>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>تفعيل تذكير الصلاة</label>
+              <span class="setting-desc">Enable prayer time notifications</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="prayerEnabled" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="prayer-grid" id="prayerGrid">
+            <div class="prayer-item">
+              <label class="switch">
+                <input type="checkbox" id="prayerFajr" checked />
+                <span class="slider"></span>
+              </label>
+              <span>🌅 الفجر (Fajr)</span>
+            </div>
+            <div class="prayer-item">
+              <label class="switch">
+                <input type="checkbox" id="prayerDhuhr" checked />
+                <span class="slider"></span>
+              </label>
+              <span>☀️ الظهر (Dhuhr)</span>
+            </div>
+            <div class="prayer-item">
+              <label class="switch">
+                <input type="checkbox" id="prayerAsr" checked />
+                <span class="slider"></span>
+              </label>
+              <span>🌤️ العصر (Asr)</span>
+            </div>
+            <div class="prayer-item">
+              <label class="switch">
+                <input type="checkbox" id="prayerMaghrib" checked />
+                <span class="slider"></span>
+              </label>
+              <span>🌅 المغرب (Maghrib)</span>
+            </div>
+            <div class="prayer-item">
+              <label class="switch">
+                <input type="checkbox" id="prayerIsha" checked />
+                <span class="slider"></span>
+              </label>
+              <span>🌙 العشاء (Isha)</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Islamic Events -->
+        <section class="settings-section">
+          <h2>📅 المناسبات الإسلامية | Islamic Events</h2>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>تفعيل إشعارات المناسبات</label>
+              <span class="setting-desc"
+                >Get notified about Islamic events and holidays</span
+              >
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="eventNotifications" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Data Management -->
+        <section class="settings-section">
+          <h2>💾 إدارة البيانات | Data Management</h2>
+
+          <div class="data-actions">
+            <button class="action-btn" id="exportBtn">
+              📤 تصدير الإعدادات
+            </button>
+            <button class="action-btn" id="importBtn">
+              📥 استيراد الإعدادات
+            </button>
+            <button class="action-btn danger" id="resetBtn">
+              🔄 إعادة تعيين الكل
+            </button>
+          </div>
+          <input
+            type="file"
+            id="importFile"
+            accept=".json"
+            style="display: none"
+          />
+        </section>
+
+        <!-- Save Button -->
+        <div class="save-section">
+          <button class="save-btn" id="saveBtn">💾 حفظ الإعدادات</button>
+          <span class="save-status" id="saveStatus"></span>
+        </div>
+
+        <!-- About -->
+        <section class="settings-section about">
+          <h2>ℹ️ عن الإضافة | About</h2>
+          <p>أذكار المسلم - إضافة كروم لتذكيرك بذكر الله</p>
+          <p>Azkar Extension v1.0.0</p>
+          <p>Made with ❤️ for the Muslim community</p>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

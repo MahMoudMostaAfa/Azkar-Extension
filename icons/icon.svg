@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1B5E20"/>
+      <stop offset="100%" style="stop-color:#4CAF50"/>
+    </linearGradient>
+    <linearGradient id="moon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD54F"/>
+      <stop offset="100%" style="stop-color:#FFC107"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Circle -->
+  <circle cx="64" cy="64" r="60" fill="url(#bg)"/>
+  <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  <!-- Crescent Moon -->
+  <path d="M72 28 C52 28 36 44 36 64 C36 84 52 100 72 100 C58 94 48 80 48 64 C48 48 58 34 72 28Z" fill="url(#moon)"/>
+  <!-- Star -->
+  <polygon points="88,52 90.5,58 97,59 92.5,63 93.8,70 88,66.5 82.2,70 83.5,63 79,59 85.5,58" fill="#FFD54F"/>
+  <!-- Prayer Beads hint (small dots) -->
+  <circle cx="64" cy="110" r="2.5" fill="rgba(255,255,255,0.6)"/>
+  <circle cx="72" cy="109" r="2" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="56" cy="109" r="2" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="80" cy="106" r="1.5" fill="rgba(255,255,255,0.3)"/>
+  <circle cx="48" cy="106" r="1.5" fill="rgba(255,255,255,0.3)"/>
+</svg>

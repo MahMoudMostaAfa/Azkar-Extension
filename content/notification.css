@@ -1,0 +1,399 @@
+/* ===== Azkar Notification Overlay ===== */
+/* This appears on web pages when it's time for a dhikr */
+
+@import url("https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cairo:wght@400;600&display=swap");
+
+.azkar-notification-overlay {
+  position: fixed;
+  z-index: 2147483647;
+  font-family:
+    "Cairo", "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  direction: rtl;
+  pointer-events: none;
+  animation: azkarSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Position variants */
+.azkar-notification-overlay.top-right {
+  top: 20px;
+  right: 20px;
+}
+
+.azkar-notification-overlay.top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.azkar-notification-overlay.bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+.azkar-notification-overlay.bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.azkar-notification-overlay.center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Slide-in animations based on position */
+.azkar-notification-overlay.top-right {
+  animation-name: azkarSlideInRight;
+}
+
+.azkar-notification-overlay.top-left {
+  animation-name: azkarSlideInLeft;
+}
+
+.azkar-notification-overlay.bottom-right {
+  animation-name: azkarSlideInRight;
+}
+
+.azkar-notification-overlay.bottom-left {
+  animation-name: azkarSlideInLeft;
+}
+
+.azkar-notification-overlay.center {
+  animation-name: azkarSlideInCenter;
+}
+
+@keyframes azkarSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes azkarSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes azkarSlideInCenter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Slide-out animation */
+.azkar-notification-overlay.hiding {
+  animation: azkarSlideOut 0.4s ease forwards;
+}
+
+.azkar-notification-overlay.hiding.center {
+  animation: azkarSlideOutCenter 0.4s ease forwards;
+}
+
+@keyframes azkarSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+}
+
+@keyframes azkarSlideOutCenter {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}
+
+/* Notification Card */
+.azkar-notification-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8faf8 100%);
+  border-radius: 20px;
+  padding: 20px;
+  width: 380px;
+  max-width: 90vw;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.15),
+    0 2px 10px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top decorative bar */
+.azkar-notification-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #1b5e20,
+    #4caf50,
+    #81c784,
+    #4caf50,
+    #1b5e20
+  );
+  border-radius: 20px 20px 0 0;
+}
+
+/* ===== Countdown Progress Ring (Rounded Line) ===== */
+.azkar-countdown-ring {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 36px;
+  height: 36px;
+}
+
+.azkar-countdown-ring svg {
+  width: 36px;
+  height: 36px;
+  transform: rotate(-90deg);
+}
+
+.azkar-countdown-ring .ring-bg {
+  fill: none;
+  stroke: #e8f5e9;
+  stroke-width: 3;
+}
+
+.azkar-countdown-ring .ring-progress {
+  fill: none;
+  stroke: #4caf50;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 88;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.azkar-countdown-ring .ring-progress.ending {
+  stroke: #ff9800;
+}
+
+.azkar-countdown-ring .ring-progress.critical {
+  stroke: #f44336;
+}
+
+.azkar-countdown-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: 700;
+  color: #4caf50;
+}
+
+/* Close button */
+.azkar-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #999;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+}
+
+.azkar-close-btn:hover {
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+/* Header */
+.azkar-notif-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-left: 40px;
+}
+
+.azkar-notif-icon {
+  font-size: 18px;
+}
+
+.azkar-notif-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1b5e20;
+  letter-spacing: 0.5px;
+}
+
+.azkar-notif-category {
+  display: inline-block;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-right: auto;
+}
+
+/* Arabic Text */
+.azkar-notif-arabic {
+  font-family: "Amiri Quran", "Noto Naskh Arabic", "Traditional Arabic", serif;
+  font-size: 22px;
+  line-height: 2;
+  color: #1a1a1a;
+  text-align: center;
+  padding: 16px 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(27, 94, 32, 0.04),
+    rgba(76, 175, 80, 0.04)
+  );
+  border-radius: 14px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(76, 175, 80, 0.08);
+}
+
+/* Transliteration */
+.azkar-notif-transliteration {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  font-style: italic;
+  margin-bottom: 6px;
+  direction: ltr;
+}
+
+/* Translation */
+.azkar-notif-translation {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 10px;
+  direction: ltr;
+  line-height: 1.6;
+}
+
+/* Meta */
+.azkar-notif-meta {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.azkar-notif-source {
+  font-size: 10px;
+  color: #1b5e20;
+  font-weight: 600;
+}
+
+.azkar-notif-times {
+  font-size: 10px;
+  color: #888;
+}
+
+/* ===== Bottom Progress Bar (Decreasing Rounded Line) ===== */
+.azkar-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #e8f5e9;
+  border-radius: 0 0 20px 20px;
+  overflow: hidden;
+}
+
+.azkar-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #81c784);
+  border-radius: 4px;
+  width: 100%;
+  transition: width 1s linear;
+}
+
+.azkar-progress-fill.ending {
+  background: linear-gradient(90deg, #ff9800, #ffb74d);
+}
+
+.azkar-progress-fill.critical {
+  background: linear-gradient(90deg, #f44336, #ef5350);
+  animation: azkarPulse 0.5s ease infinite;
+}
+
+@keyframes azkarPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .azkar-notification-card {
+    background: linear-gradient(145deg, #1e1e1e 0%, #252525 100%);
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.4),
+      0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .azkar-notif-arabic {
+    color: #e0e0e0;
+    background: linear-gradient(
+      135deg,
+      rgba(76, 175, 80, 0.08),
+      rgba(27, 94, 32, 0.08)
+    );
+    border-color: rgba(76, 175, 80, 0.15);
+  }
+
+  .azkar-notif-transliteration {
+    color: #999;
+  }
+
+  .azkar-notif-translation {
+    color: #aaa;
+  }
+
+  .azkar-close-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #aaa;
+  }
+
+  .azkar-notif-category {
+    background: rgba(76, 175, 80, 0.15);
+  }
+}

@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>أذكار المسلم - Azkar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-content">
+          <h1 class="app-title" data-i18n="appTitle">📿 أذكار المسلم</h1>
+          <div class="header-actions">
+            <button
+              id="settingsBtn"
+              class="icon-btn"
+              data-i18n-title="settings"
+              title="الإعدادات"
+            >
+              ⚙️
+            </button>
+            <button id="langToggle" class="icon-btn" title="Language">
+              EN
+            </button>
+          </div>
+        </div>
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+          <button class="nav-tab active" data-tab="home" data-i18n="tabHome">
+            🏠 الرئيسية
+          </button>
+          <button
+            class="nav-tab"
+            data-tab="categories"
+            data-i18n="tabCategories"
+          >
+            📂 التصنيفات
+          </button>
+          <button class="nav-tab" data-tab="progress" data-i18n="tabProgress">
+            📊 التقدم
+          </button>
+          <button class="nav-tab" data-tab="events" data-i18n="tabEvents">
+            🕌 المناسبات
+          </button>
+          <button class="nav-tab" data-tab="custom" data-i18n="tabCustom">
+            ✏️ مخصص
+          </button>
+        </nav>
+      </header>
+
+      <!-- Home Tab -->
+      <main id="homeTab" class="tab-content active">
+        <!-- Hijri Date -->
+        <div class="hijri-date-bar" id="hijriDateBar">
+          <span class="hijri-icon">🌙</span>
+          <span class="hijri-text" id="hijriDateText">Loading...</span>
+        </div>
+
+        <!-- Prayer Times Strip -->
+        <div class="prayer-times-strip" id="prayerTimesStrip">
+          <div class="prayer-mini" id="pt-fajr" data-prayer="fajr">
+            <span class="pt-name" data-i18n="fajr">الفجر</span>
+            <span class="pt-time">--:--</span>
+            <span class="pt-remaining"></span>
+            <button class="pt-adhan-btn" title="Play Adhan">🔊</button>
+            <div class="pt-tooltip"></div>
+          </div>
+          <div class="prayer-mini" id="pt-dhuhr" data-prayer="dhuhr">
+            <span class="pt-name" data-i18n="dhuhr">الظهر</span>
+            <span class="pt-time">--:--</span>
+            <span class="pt-remaining"></span>
+            <button class="pt-adhan-btn" title="Play Adhan">🔊</button>
+            <div class="pt-tooltip"></div>
+          </div>
+          <div class="prayer-mini" id="pt-asr" data-prayer="asr">
+            <span class="pt-name" data-i18n="asr">العصر</span>
+            <span class="pt-time">--:--</span>
+            <span class="pt-remaining"></span>
+            <button class="pt-adhan-btn" title="Play Adhan">🔊</button>
+            <div class="pt-tooltip"></div>
+          </div>
+          <div class="prayer-mini" id="pt-maghrib" data-prayer="maghrib">
+            <span class="pt-name" data-i18n="maghrib">المغرب</span>
+            <span class="pt-time">--:--</span>
+            <span class="pt-remaining"></span>
+            <button class="pt-adhan-btn" title="Play Adhan">🔊</button>
+            <div class="pt-tooltip"></div>
+          </div>
+          <div class="prayer-mini" id="pt-isha" data-prayer="isha">
+            <span class="pt-name" data-i18n="isha">العشاء</span>
+            <span class="pt-time">--:--</span>
+            <span class="pt-remaining"></span>
+            <button class="pt-adhan-btn" title="Play Adhan">🔊</button>
+            <div class="pt-tooltip"></div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+          <div class="stat-card">
+            <span class="stat-number" id="todayCount">0</span>
+            <span class="stat-label" data-i18n="today">اليوم</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number" id="streakCount">0</span>
+            <span class="stat-label" data-i18n="streak">🔥 استمرارية</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number" id="totalCount">0</span>
+            <span class="stat-label" data-i18n="total">الإجمالي</span>
+          </div>
+        </div>
+
+        <!-- Current Dhikr Card -->
+        <div class="dhikr-card" id="currentDhikr">
+          <div class="dhikr-category-badge" id="dhikrCategoryBadge">
+            أذكار عامة
+          </div>
+          <p class="dhikr-arabic" id="dhikrArabic">
+            سُبْحَانَ اللَّهِ وَبِحَمْدِهِ
+          </p>
+          <p class="dhikr-transliteration" id="dhikrTransliteration">
+            SubhanAllahi wa bihamdihi
+          </p>
+          <p class="dhikr-translation" id="dhikrTranslation">
+            How perfect Allah is and I praise Him
+          </p>
+          <div class="dhikr-meta">
+            <span class="dhikr-source" id="dhikrSource">📖 صحيح مسلم</span>
+            <span class="dhikr-times" id="dhikrTimes">🔁 ١٠٠ مرة</span>
+          </div>
+
+          <!-- Progress Ring -->
+          <div class="counter-section">
+            <div class="progress-ring-container">
+              <svg class="progress-ring" width="100" height="100">
+                <circle class="progress-ring-bg" cx="50" cy="50" r="42" />
+                <circle
+                  class="progress-ring-fill"
+                  id="progressRing"
+                  cx="50"
+                  cy="50"
+                  r="42"
+                />
+              </svg>
+              <span class="counter-text" id="counterText">0</span>
+            </div>
+            <div class="counter-controls">
+              <button class="counter-btn" id="counterBtn" data-i18n="count">
+                سبّح
+              </button>
+              <button
+                class="counter-btn secondary"
+                id="resetBtn"
+                data-i18n="reset"
+              >
+                إعادة
+              </button>
+            </div>
+          </div>
+
+          <!-- Audio Controls -->
+          <div class="audio-controls">
+            <button class="audio-btn" id="playAudioBtn" data-i18n="listen">
+              🔊 استمع
+            </button>
+          </div>
+
+          <!-- Share Button -->
+          <div class="share-section">
+            <button class="share-btn" id="shareBtn" data-i18n="share">
+              📤 مشاركة
+            </button>
+          </div>
+        </div>
+
+        <!-- Next Dhikr Button -->
+        <button class="next-btn" id="nextDhikrBtn" data-i18n="nextDhikr">
+          ⬅️ الذكر التالي
+        </button>
+
+        <!-- Quick Categories -->
+        <div class="quick-categories">
+          <h3 data-i18n="quickBrowse">تصفح سريع</h3>
+          <div class="category-chips" id="categoryChips"></div>
+        </div>
+
+        <!-- Reminder Toggle -->
+        <div class="reminder-section">
+          <div class="reminder-toggle">
+            <span data-i18n="autoReminder">🔔 التذكير التلقائي</span>
+            <label class="switch">
+              <input type="checkbox" id="reminderToggle" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="interval-selector" id="intervalSelector">
+            <label data-i18n="every">كل:</label>
+            <select id="intervalSelect">
+              <option value="2" data-i18n="min2">٢ دقائق</option>
+              <option value="5" data-i18n="min5">٥ دقائق</option>
+              <option value="10" data-i18n="min10">١٠ دقائق</option>
+              <option value="15" data-i18n="min15">١٥ دقيقة</option>
+              <option value="30" selected data-i18n="min30">٣٠ دقيقة</option>
+              <option value="60" data-i18n="hour1">ساعة</option>
+              <option value="120" data-i18n="hour2">ساعتين</option>
+            </select>
+          </div>
+        </div>
+      </main>
+
+      <!-- Categories Tab -->
+      <div id="categoriesTab" class="tab-content">
+        <div class="categories-grid" id="categoriesGrid"></div>
+        <div
+          id="categoryAzkarList"
+          class="category-azkar-list"
+          style="display: none"
+        >
+          <button
+            class="back-btn"
+            id="backToCategories"
+            data-i18n="backToCategories"
+          >
+            → العودة للتصنيفات
+          </button>
+          <h3 id="categoryTitle"></h3>
+          <div id="azkarList" class="azkar-list"></div>
+        </div>
+      </div>
+
+      <!-- Progress Tab -->
+      <div id="progressTab" class="tab-content">
+        <div class="progress-overview">
+          <h3 data-i18n="progressOverview">📊 نظرة عامة</h3>
+          <div class="progress-cards">
+            <div class="progress-card">
+              <div class="progress-card-icon">📅</div>
+              <div class="progress-card-info">
+                <span class="progress-card-value" id="progressToday">0</span>
+                <span class="progress-card-label" data-i18n="today">اليوم</span>
+              </div>
+            </div>
+            <div class="progress-card">
+              <div class="progress-card-icon">📆</div>
+              <div class="progress-card-info">
+                <span class="progress-card-value" id="progressWeek">0</span>
+                <span class="progress-card-label" data-i18n="thisWeek"
+                  >هذا الأسبوع</span
+                >
+              </div>
+            </div>
+            <div class="progress-card">
+              <div class="progress-card-icon">🗓️</div>
+              <div class="progress-card-info">
+                <span class="progress-card-value" id="progressMonth">0</span>
+                <span class="progress-card-label" data-i18n="thisMonth"
+                  >هذا الشهر</span
+                >
+              </div>
+            </div>
+            <div class="progress-card">
+              <div class="progress-card-icon">🔥</div>
+              <div class="progress-card-info">
+                <span class="progress-card-value" id="progressStreak">0</span>
+                <span class="progress-card-label" data-i18n="consecutiveDays"
+                  >أيام متتالية</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Chart -->
+          <div class="chart-section">
+            <h4 data-i18n="last7Days">آخر ٧ أيام</h4>
+            <div class="bar-chart" id="weeklyChart"></div>
+          </div>
+
+          <!-- Insights -->
+          <div class="insights-section" id="insightsSection">
+            <h4 data-i18n="tipsTitle">💡 نصائح للتطور الروحي</h4>
+            <div class="insight-card" id="insightCard">
+              <p id="insightText"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Events Tab -->
+      <div id="eventsTab" class="tab-content">
+        <h3 data-i18n="islamicEvents">🕌 المناسبات الإسلامية</h3>
+        <div class="events-list" id="eventsList"></div>
+      </div>
+
+      <!-- Custom Azkar Tab -->
+      <div id="customTab" class="tab-content">
+        <h3 data-i18n="customAzkar">✏️ أذكار مخصصة</h3>
+        <div class="custom-form">
+          <div class="form-group">
+            <label data-i18n="arabicText">النص العربي</label>
+            <textarea
+              id="customArabic"
+              data-i18n-placeholder="writeHere"
+              placeholder="اكتب الذكر هنا..."
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label data-i18n="transliterationOpt">النطق (اختياري)</label>
+            <input
+              type="text"
+              id="customTransliteration"
+              placeholder="Transliteration..."
+            />
+          </div>
+          <div class="form-group">
+            <label data-i18n="translationOpt">الترجمة (اختياري)</label>
+            <input
+              type="text"
+              id="customTranslation"
+              placeholder="Translation..."
+            />
+          </div>
+          <div class="form-group">
+            <label data-i18n="sourceOpt">المصدر (اختياري)</label>
+            <input
+              type="text"
+              id="customSource"
+              placeholder="Source reference..."
+            />
+          </div>
+          <div class="form-group">
+            <label data-i18n="repeatCount">عدد التكرار</label>
+            <input
+              type="number"
+              id="customTimes"
+              value="1"
+              min="1"
+              max="1000"
+            />
+          </div>
+          <button class="add-btn" id="addCustomBtn" data-i18n="addCustomDhikr">
+            ➕ إضافة ذكر مخصص
+          </button>
+        </div>
+        <div class="custom-list" id="customList"></div>
+      </div>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
