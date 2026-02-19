@@ -42,9 +42,10 @@
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/MahMoudMostaAfa/Azkar-Extension.git](https://github.com/your-username/azkar-extension.git)
+    git clone [https://github.com/MahMoudMostaAfa/Azkar-Extension.git](https://github.com/MahMoudMostaAfa/Azkar-Extension.git)
     ```
 2.  Open **Chrome** and go to `chrome://extensions/`.
 3.  Enable **Developer mode** (top-right).
 4.  Click **Load unpacked** and select the project folder.
+
 
