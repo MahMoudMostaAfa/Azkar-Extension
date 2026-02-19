@@ -1,5 +1,7 @@
 // ===== Options Page Script =====
 import { AZKAR_CATEGORIES } from "../data/azkar.js";
+import { COUNTRIES } from "../js/countries.js";
+import { formatTime } from "../js/utils.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   let settings = {};
@@ -51,6 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       notificationSound: true,
       popupDuration: 15,
       popupPosition: "top-right",
+      timeFormat: "24",
     };
   }
 
@@ -73,6 +76,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       settings.showSource !== false;
     document.getElementById("audioEnabled").checked =
       settings.audioEnabled === true;
+    const tfEl = document.getElementById("timeFormat");
+    if (tfEl) tfEl.value = settings.timeFormat || "24";
     document.getElementById("notificationSound").checked =
       settings.notificationSound !== false;
     document.getElementById("eventNotifications").checked =
@@ -105,6 +110,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("showTranslation").checked;
     settings.showSource = document.getElementById("showSource").checked;
     settings.audioEnabled = document.getElementById("audioEnabled").checked;
+    settings.timeFormat = document.getElementById("timeFormat")?.value || "24";
     settings.notificationSound =
       document.getElementById("notificationSound").checked;
     settings.eventNotifications =
@@ -249,13 +255,58 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ===== Location =====
   async function loadLocationSettings() {
-    const data = await chrome.storage.local.get("userLocation");
-    if (data.userLocation) {
-      document.getElementById("latitude").value = data.userLocation.lat || "";
-      document.getElementById("longitude").value = data.userLocation.lng || "";
-      document.getElementById("calcMethod").value =
-        data.userLocation.method || 4;
+    const countrySelect = document.getElementById("countrySelect");
+    const citySelect = document.getElementById("citySelect");
+
+    // Populate country list
+    COUNTRIES.sort((a, b) => a.name.localeCompare(b.name)).forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c.code;
+      opt.textContent = `${c.name} (${c.ar})`;
+      countrySelect.appendChild(opt);
+    });
+
+    // Populate city list for a given country code
+    function populateCities(countryCode, selectedCity = "") {
+      citySelect.innerHTML =
+        '<option value="">-- اختر المدينة | Select City --</option>';
+      const country = COUNTRIES.find((c) => c.code === countryCode);
+      if (country && country.cities && country.cities.length) {
+        [...country.cities].sort().forEach((city) => {
+          const opt = document.createElement("option");
+          opt.value = city;
+          opt.textContent = city;
+          citySelect.appendChild(opt);
+        });
+        citySelect.disabled = false;
+        if (selectedCity) citySelect.value = selectedCity;
+      } else {
+        citySelect.disabled = true;
+      }
     }
+
+    // Load saved location
+    const data = await chrome.storage.local.get("userLocation");
+    const loc = data.userLocation || {};
+
+    document.getElementById("latitude").value = loc.lat ?? "";
+    document.getElementById("longitude").value = loc.lng ?? "";
+    document.getElementById("calcMethod").value = loc.method || 4;
+
+    if (loc.countryCode || loc.country) {
+      const code = loc.countryCode || loc.country; // backwards compat
+      countrySelect.value = code;
+      populateCities(code, loc.city || "");
+    } else {
+      citySelect.disabled = true;
+    }
+
+    // Re-populate cities on country change
+    countrySelect.addEventListener("change", () => {
+      populateCities(countrySelect.value);
+      saveLocation();
+    });
+    citySelect.addEventListener("change", saveLocation);
   }
 
   function detectLocation() {
@@ -305,20 +356,35 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function saveLocation() {
+    const method = parseInt(document.getElementById("calcMethod").value);
+    const countryCode = document.getElementById("countrySelect")?.value || "";
+    const city = document.getElementById("citySelect")?.value || "";
     const lat = parseFloat(document.getElementById("latitude").value);
     const lng = parseFloat(document.getElementById("longitude").value);
-    const method = parseInt(document.getElementById("calcMethod").value);
 
-    if (isNaN(lat) || isNaN(lng)) return;
+    // Resolve country name (Aladhan API needs name, not ISO code)
+    const countryObj = COUNTRIES.find((c) => c.code === countryCode);
+    const countryName = countryObj ? countryObj.name : countryCode;
+
+    const location = { method };
+    if (countryCode && city) {
+      // City-based lookup takes priority
+      location.country = countryName; // full name for Aladhan API
+      location.countryCode = countryCode; // ISO code for UI restoration
+      location.city = city;
+    } else if (!isNaN(lat) && !isNaN(lng)) {
+      // Fall back to coordinates
+      location.lat = lat;
+      location.lng = lng;
+    } else {
+      return; // nothing valid to save
+    }
 
     return new Promise((resolve) => {
-      chrome.runtime.sendMessage(
-        { type: "SAVE_LOCATION", location: { lat, lng, method } },
-        () => {
-          loadPrayerTimesPreview();
-          resolve();
-        },
-      );
+      chrome.runtime.sendMessage({ type: "SAVE_LOCATION", location }, () => {
+        loadPrayerTimesPreview();
+        resolve();
+      });
     });
   }
 

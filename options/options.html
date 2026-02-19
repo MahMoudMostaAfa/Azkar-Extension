@@ -80,6 +80,19 @@
               <option value="center">الوسط</option>
             </select>
           </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🕒 صيغة الوقت | Time Format</label>
+              <span class="setting-desc"
+                >Display prayer times in 12h or 24h format</span
+              >
+            </div>
+            <select id="timeFormat">
+              <option value="24" selected>٢٤ ساعة (24h)</option>
+              <option value="12">١٢ ساعة (12h AM/PM)</option>
+            </select>
+          </div>
         </section>
 
         <!-- Appearance -->
@@ -245,6 +258,30 @@
               placeholder="39.8262"
               class="input-field"
             />
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🏳️ الدولة | Country</label>
+              <span class="setting-desc"
+                >Select country for city-based prayer lookup</span
+              >
+            </div>
+            <select id="countrySelect" class="input-field">
+              <option value="">-- اختر الدولة | Select Country --</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>🏙️ المدينة | City</label>
+              <span class="setting-desc"
+                >City overrides coordinates when selected</span
+              >
+            </div>
+            <select id="citySelect" class="input-field" disabled>
+              <option value="">-- اختر المدينة | Select City --</option>
+            </select>
           </div>
 
           <div class="setting-item">

@@ -10,7 +10,8 @@
     "contextMenus",
     "scripting",
     "activeTab",
-    "offscreen"
+    "offscreen",
+    "windows"
   ],
   "host_permissions": [
     "https://api.aladhan.com/*",

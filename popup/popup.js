@@ -7,6 +7,7 @@ import {
   getWeekKey,
   getMonthKey,
   showToast,
+  formatTime,
 } from "../js/utils.js";
 import { t, applyTranslations, applyLanguageDirection } from "../js/i18n.js";
 import { AudioService } from "../js/audio.js";
@@ -148,7 +149,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         const el = document.getElementById(`pt-${id}`);
         const timeStr = timings[key];
         if (el && timeStr) {
-          el.querySelector(".pt-time").textContent = timeStr;
+          el.querySelector(".pt-time").textContent = formatTime(
+            timeStr,
+            settings.timeFormat || "24",
+            currentLang,
+          );
           const [h, m] = timeStr.split(":").map(Number);
           const prayerMinutes = h * 60 + m;
           prayerMinutesMap[id] = prayerMinutes;

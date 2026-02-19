@@ -483,23 +483,48 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
  * Handle the azkar reminder alarm - show notification
  * Tries multiple tabs across all windows for reliability
  */
-async function handleAzkarReminder() {
+async function handleAzkarReminder(forceTest = false) {
+  console.log(
+    "[Azkar] handleAzkarReminder triggered at",
+    new Date().toLocaleTimeString(),
+    forceTest ? "(Forced Test)" : "",
+  );
   const data = await chrome.storage.local.get(["settings", "customAzkar"]);
-  const settings = data.settings || DEFAULT_SETTINGS;
+  const settings = { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
 
-  if (!settings.enabled) return;
+  // If forceTest is true, we ignore settings.enabled
+  if (!forceTest && !settings.enabled) {
+    console.log("[Azkar] Reminders disabled in settings, skipping");
+    return;
+  }
 
   const dhikr = getRandomDhikr(settings.enabledCategories, data.customAzkar);
-  if (!dhikr) return;
+  if (!dhikr) {
+    console.log("[Azkar] No dhikr found, skipping");
+    return;
+  }
+  console.log("[Azkar] Selected dhikr:", dhikr.arabic?.substring(0, 30));
 
   // Try to show overlay on tabs (try multiple for reliability)
   let sentToTab = false;
   try {
-    // First try active tabs across ALL windows
-    const activeTabs = await chrome.tabs.query({ active: true });
+    // First try active tabs in the current window
+    const activeTabs = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
     for (const tab of activeTabs) {
       if (sentToTab) break;
       sentToTab = await trySendOverlay(tab, dhikr, settings);
+    }
+
+    // Then try active tabs across ALL windows
+    if (!sentToTab) {
+      const allActiveTabs = await chrome.tabs.query({ active: true });
+      for (const tab of allActiveTabs) {
+        if (sentToTab) break;
+        sentToTab = await trySendOverlay(tab, dhikr, settings);
+      }
     }
 
     // If no active tab worked, try any regular http/https tab
@@ -512,12 +537,23 @@ async function handleAzkarReminder() {
         sentToTab = await trySendOverlay(tab, dhikr, settings);
       }
     }
+    console.log("[Azkar] Overlay sent to tab:", sentToTab);
   } catch (e) {
     console.log("[Azkar] Tab query error:", e.message);
   }
 
-  // Always show browser notification as backup
-  showBrowserNotification(dhikr);
+  // Show native notification when overlay failed or browser is not in focus
+  if (!sentToTab) {
+    showBrowserNotification(dhikr);
+  } else {
+    try {
+      const wins = await chrome.windows.getAll({ windowTypes: ["normal"] });
+      const visible = wins.some((w) => w.focused && w.state !== "minimized");
+      if (!visible) showBrowserNotification(dhikr);
+    } catch (_) {
+      showBrowserNotification(dhikr);
+    }
+  }
 }
 
 /**
@@ -525,22 +561,37 @@ async function handleAzkarReminder() {
  */
 async function trySendOverlay(tab, dhikr, settings) {
   if (!tab || !tab.id || !tab.url) return false;
+  // Skip internal browser pages where content scripts can't run
   if (
     tab.url.startsWith("chrome://") ||
     tab.url.startsWith("chrome-extension://") ||
     tab.url.startsWith("about:") ||
-    tab.url.startsWith("edge://")
+    tab.url.startsWith("edge://") ||
+    tab.url.startsWith("devtools://") ||
+    tab.url.startsWith("view-source:")
   )
     return false;
 
-  // Inject content script
+  console.log(
+    "[Azkar] Attempting overlay on tab:",
+    tab.id,
+    tab.url.substring(0, 30) + "...",
+  );
+
+  // Inject content script (idempotent due to guard in content.js)
   try {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ["content/content.js"],
     });
   } catch (e) {
-    // Content script may already be injected or page restricts it
+    // Content script might already be there or injection failed (e.g. restricted domain)
+    console.log(
+      "[Azkar] Script inject info/error for tab",
+      tab.id,
+      ":",
+      e.message,
+    );
   }
 
   // Inject notification CSS
@@ -553,6 +604,9 @@ async function trySendOverlay(tab, dhikr, settings) {
     // CSS may already be injected
   }
 
+  // CRITICAL: Small delay to let content script initialize its message listener
+  await new Promise((r) => setTimeout(r, 150));
+
   // Send notification message
   try {
     const response = await chrome.tabs.sendMessage(tab.id, {
@@ -560,7 +614,19 @@ async function trySendOverlay(tab, dhikr, settings) {
       dhikr: dhikr,
       settings: settings,
     });
-    return response && response.success;
+
+    if (response && response.success) {
+      console.log("[Azkar] Overlay SUCCESS on tab", tab.id);
+      return true;
+    } else {
+      console.log(
+        "[Azkar] Overlay FAILED on tab",
+        tab.id,
+        "response:",
+        response,
+      );
+      return false;
+    }
   } catch (e) {
     console.log("[Azkar] Could not send overlay to tab:", tab.id, e.message);
     return false;
@@ -577,8 +643,8 @@ function showBrowserNotification(dhikr) {
     iconUrl: "icons/icon128.png",
     title: "📿 أذكار المسلم - Azkar",
     message: dhikr.arabic + translationText,
-    priority: 1,
-    requireInteraction: false,
+    priority: 2, // max priority → visible even when browser is minimized
+    requireInteraction: true, // stays in notification centre until dismissed
   });
 }
 
@@ -737,9 +803,13 @@ async function fetchPrayerTimes() {
   let lat = 21.4225,
     lng = 39.8262,
     method = 4;
+  let city = "",
+    country = "";
   if (data.userLocation) {
-    lat = data.userLocation.lat;
-    lng = data.userLocation.lng;
+    city = data.userLocation.city || "";
+    country = data.userLocation.country || "";
+    lat = data.userLocation.lat ?? lat;
+    lng = data.userLocation.lng ?? lng;
     method = data.userLocation.method || 4;
   }
 
@@ -749,7 +819,11 @@ async function fetchPrayerTimes() {
     const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
     const yyyy = dateObj.getFullYear();
 
-    const url = `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=${lat}&longitude=${lng}&method=${method}`;
+    // Use city-based endpoint if country & city are provided
+    const url =
+      city && country
+        ? `https://api.aladhan.com/v1/timingsByCity/${dd}-${mm}-${yyyy}?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}`
+        : `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=${lat}&longitude=${lng}&method=${method}`;
     const response = await fetch(url);
     const json = await response.json();
 
@@ -789,9 +863,13 @@ async function fetchHijriDate() {
     let lat = 21.4225,
       lng = 39.8262,
       method = 4;
+    let city = "",
+      country = "";
     if (data.userLocation) {
-      lat = data.userLocation.lat;
-      lng = data.userLocation.lng;
+      city = data.userLocation.city || "";
+      country = data.userLocation.country || "";
+      lat = data.userLocation.lat ?? lat;
+      lng = data.userLocation.lng ?? lng;
       method = data.userLocation.method || 4;
     }
 
@@ -800,7 +878,10 @@ async function fetchHijriDate() {
     const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
     const yyyy = dateObj.getFullYear();
 
-    const url = `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=${lat}&longitude=${lng}&method=${method}`;
+    const url =
+      city && country
+        ? `https://api.aladhan.com/v1/timingsByCity/${dd}-${mm}-${yyyy}?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}`
+        : `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=${lat}&longitude=${lng}&method=${method}`;
     const response = await fetch(url);
     const json = await response.json();
 
@@ -1128,7 +1209,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
 
     case "SHOW_AZKAR_NOW":
-      handleAzkarReminder().then(() => sendResponse({ success: true }));
+      // Force show reminder even if disabled in settings, for testing
+      handleAzkarReminder(true).then(() => sendResponse({ success: true }));
       return true;
 
     case "GET_RANDOM_DHIKR":

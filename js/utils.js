@@ -123,3 +123,28 @@ export function getCategoryLabelAr(category) {
   };
   return labels[category] || "أذكار";
 }
+
+/**
+ * Format a "HH:MM" time string as 12h or 24h
+ * @param {string} timeStr - Time in HH:MM (24-hour) format
+ * @param {string} format - "12" for 12-hour, "24" for 24-hour
+ * @param {string} lang  - "ar" to use Arabic-Indic digits, else Western
+ * @returns {string}
+ */
+export function formatTime(timeStr, format = "24", lang = "ar") {
+  if (!timeStr || !timeStr.includes(":")) return timeStr || "--:--";
+  if (format !== "12") return toArabicNum(timeStr, lang);
+
+  let [h, m] = timeStr.split(":").map(Number);
+  const isAM = h < 12;
+  const suffix = isAM
+    ? lang === "ar"
+      ? "ص"
+      : "AM"
+    : lang === "ar"
+      ? "م"
+      : "PM";
+  h = h % 12 || 12;
+  const formatted = `${h}:${String(m).padStart(2, "0")}`;
+  return `${toArabicNum(formatted, lang)} ${suffix}`;
+}
