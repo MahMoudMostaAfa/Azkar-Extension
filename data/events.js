@@ -120,19 +120,3 @@ export const ISLAMIC_EVENTS = [
     weekDays: [1, 4], // Monday and Thursday
   },
 ];
-
-// Hijri month names
-export const HIJRI_MONTHS = {
-  1: { ar: "محرم", en: "Muharram" },
-  2: { ar: "صفر", en: "Safar" },
-  3: { ar: "ربيع الأول", en: "Rabi al-Awwal" },
-  4: { ar: "ربيع الثاني", en: "Rabi al-Thani" },
-  5: { ar: "جمادى الأولى", en: "Jumada al-Ula" },
-  6: { ar: "جمادى الآخرة", en: "Jumada al-Thani" },
-  7: { ar: "رجب", en: "Rajab" },
-  8: { ar: "شعبان", en: "Sha'ban" },
-  9: { ar: "رمضان", en: "Ramadan" },
-  10: { ar: "شوال", en: "Shawwal" },
-  11: { ar: "ذو القعدة", en: "Dhul Qi'dah" },
-  12: { ar: "ذو الحجة", en: "Dhul Hijjah" },
-};

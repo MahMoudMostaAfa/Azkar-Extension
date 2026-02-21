@@ -47,8 +47,11 @@
           <button class="nav-tab" data-tab="progress" data-i18n="tabProgress">
             📊 التقدم
           </button>
-          <button class="nav-tab" data-tab="events" data-i18n="tabEvents">
-            🕌 المناسبات
+          <button class="nav-tab" data-tab="hadith" data-i18n="tabHadith">
+            📜 الأحاديث
+          </button>
+          <button class="nav-tab" data-tab="radio" data-i18n="tabRadio">
+            📻 إذاعة
           </button>
           <button class="nav-tab" data-tab="custom" data-i18n="tabCustom">
             ✏️ مخصص
@@ -141,14 +144,14 @@
           <!-- Progress Ring -->
           <div class="counter-section">
             <div class="progress-ring-container">
-              <svg class="progress-ring" width="100" height="100">
-                <circle class="progress-ring-bg" cx="50" cy="50" r="42" />
+              <svg class="progress-ring" width="70" height="70">
+                <circle class="progress-ring-bg" cx="35" cy="35" r="29" />
                 <circle
                   class="progress-ring-fill"
                   id="progressRing"
-                  cx="50"
-                  cy="50"
-                  r="42"
+                  cx="35"
+                  cy="35"
+                  r="29"
                 />
               </svg>
               <span class="counter-text" id="counterText">0</span>
@@ -187,10 +190,64 @@
           ⬅️ الذكر التالي
         </button>
 
+        <!-- Daily Hadith Section -->
+        <div class="hadith-section" id="hadithSection">
+          <h3 class="hadith-section-title" data-i18n="hadithTitle">
+            📜 حديث اليوم
+          </h3>
+          <div class="hadith-card" id="hadithCard">
+            <div class="hadith-loading" id="hadithLoading">
+              <div class="hadith-spinner"></div>
+              <span data-i18n="hadithLoading">جاري التحميل...</span>
+            </div>
+            <div
+              class="hadith-content"
+              id="hadithContent"
+              style="display: none"
+            >
+              <p class="hadith-text" id="hadithText"></p>
+              <div class="hadith-meta">
+                <span class="hadith-attribution" id="hadithAttribution"></span>
+                <span class="hadith-grade" id="hadithGrade"></span>
+              </div>
+            </div>
+            <div class="hadith-error" id="hadithError" style="display: none">
+              <span>⚠️</span>
+              <span data-i18n="hadithError">تعذر تحميل الحديث</span>
+            </div>
+          </div>
+          <button
+            class="hadith-next-btn"
+            id="nextHadithBtn"
+            data-i18n="nextHadith"
+          >
+            🔄 حديث آخر
+          </button>
+        </div>
+
         <!-- Quick Categories -->
         <div class="quick-categories">
           <h3 data-i18n="quickBrowse">تصفح سريع</h3>
           <div class="category-chips" id="categoryChips"></div>
+        </div>
+
+        <!-- Display Toggles -->
+        <div class="display-toggles-section">
+          <h3 data-i18n="displayOptions">👁️ خيارات العرض</h3>
+          <div class="display-toggle-item">
+            <span data-i18n="showTransliteration">📝 إظهار النطق</span>
+            <label class="switch">
+              <input type="checkbox" id="showTransliterationToggle" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="display-toggle-item">
+            <span data-i18n="showTranslation">🌐 إظهار الترجمة</span>
+            <label class="switch">
+              <input type="checkbox" id="showTranslationToggle" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
 
         <!-- Reminder Toggle -->
@@ -294,10 +351,182 @@
         </div>
       </div>
 
-      <!-- Events Tab -->
-      <div id="eventsTab" class="tab-content">
-        <h3 data-i18n="islamicEvents">🕌 المناسبات الإسلامية</h3>
-        <div class="events-list" id="eventsList"></div>
+      <!-- Hadith Tab -->
+      <div id="hadithTab" class="tab-content">
+        <!-- Sub-navigation -->
+        <div class="hadith-tab-nav">
+          <button
+            class="hadith-tab-btn active"
+            data-hadith-view="nawawi"
+            data-i18n="nawawiTitle"
+          >
+            📖 الأربعون النووية
+          </button>
+          <button
+            class="hadith-tab-btn"
+            data-hadith-view="categories"
+            data-i18n="hadithCategories"
+          >
+            📂 تصنيفات الأحاديث
+          </button>
+        </div>
+
+        <!-- 40 Nawawi View -->
+        <div class="hadith-view active" id="nawawiView">
+          <div class="nawawi-header">
+            <h3 data-i18n="nawawiSubtitle">الأربعون النووية</h3>
+            <p class="nawawi-desc" data-i18n="nawawiDesc">
+              مجموعة الإمام النووي من الأحاديث الجامعة لأصول الدين
+            </p>
+          </div>
+          <div class="nawawi-list" id="nawawiList"></div>
+        </div>
+
+        <!-- Nawawi Detail View -->
+        <div class="hadith-view" id="nawawiDetailView" style="display: none">
+          <button class="back-btn" id="backToNawawi" data-i18n="backToNawawi">
+            → العودة للقائمة
+          </button>
+          <div class="nawawi-detail-card" id="nawawiDetailCard"></div>
+          <div class="nawawi-nav-btns">
+            <button class="nawawi-prev-btn" id="nawawiPrevBtn">→ السابق</button>
+            <button class="nawawi-next-btn" id="nawawiNextBtn">التالي ←</button>
+          </div>
+        </div>
+
+        <!-- Categories View -->
+        <div class="hadith-view" id="categoriesView" style="display: none">
+          <div class="hadith-categories-grid" id="hadithCategoriesGrid"></div>
+        </div>
+
+        <!-- Category Hadiths View -->
+        <div class="hadith-view" id="categoryHadithsView" style="display: none">
+          <button
+            class="back-btn"
+            id="backToHadithCategories"
+            data-i18n="backToCategories"
+          >
+            → العودة للتصنيفات
+          </button>
+          <h3 id="hadithCategoryTitle" class="hadith-cat-title"></h3>
+          <div
+            class="hadith-cat-loading"
+            id="hadithCatLoading"
+            style="display: none"
+          >
+            <div class="hadith-spinner"></div>
+            <span data-i18n="hadithLoading">جاري التحميل...</span>
+          </div>
+          <div class="hadith-items-list" id="hadithItemsList"></div>
+          <div
+            class="hadith-pagination"
+            id="hadithPagination"
+            style="display: none"
+          >
+            <button
+              class="hadith-page-btn"
+              id="hadithPrevPage"
+              data-i18n="prevPage"
+            >
+              ← السابق
+            </button>
+            <span class="hadith-page-info" id="hadithPageInfo"></span>
+            <button
+              class="hadith-page-btn"
+              id="hadithNextPage"
+              data-i18n="nextPage"
+            >
+              التالي →
+            </button>
+          </div>
+        </div>
+
+        <!-- Single Hadith Detail View -->
+        <div class="hadith-view" id="hadithDetailView" style="display: none">
+          <button class="back-btn" id="backToHadithList" data-i18n="backToList">
+            → العودة للقائمة
+          </button>
+          <div class="hadith-detail-card" id="hadithDetailCard"></div>
+        </div>
+      </div>
+
+      <!-- Quran Radio Tab -->
+      <div id="radioTab" class="tab-content">
+        <div class="radio-container">
+          <!-- Now Playing Bar -->
+          <div
+            class="radio-now-playing"
+            id="radioNowPlaying"
+            style="display: none"
+          >
+            <div class="radio-np-info">
+              <span class="radio-np-icon">📻</span>
+              <div class="radio-np-details">
+                <span class="radio-np-name" id="radioNpName">---</span>
+                <span
+                  class="radio-np-status"
+                  id="radioNpStatus"
+                  data-i18n="radioLive"
+                  >بث مباشر</span
+                >
+              </div>
+            </div>
+            <div class="radio-np-controls">
+              <button class="radio-vol-btn" id="radioVolDown" title="-">
+                🔉
+              </button>
+              <input
+                type="range"
+                id="radioVolume"
+                class="radio-vol-slider"
+                min="0"
+                max="100"
+                value="80"
+              />
+              <button class="radio-vol-btn" id="radioVolUp" title="+">
+                🔊
+              </button>
+              <button
+                class="radio-stop-btn"
+                id="radioStopBtn"
+                data-i18n="radioStop"
+              >
+                ⏹ إيقاف
+              </button>
+            </div>
+          </div>
+
+          <!-- Search -->
+          <div class="radio-search-box">
+            <input
+              type="text"
+              id="radioSearch"
+              class="radio-search-input"
+              data-i18n-placeholder="radioSearchPlaceholder"
+              placeholder="ابحث عن قارئ..."
+            />
+          </div>
+
+          <!-- Popular Reciters -->
+          <h3 class="radio-section-title" data-i18n="radioPopular">
+            ⭐ القراء المشهورون
+          </h3>
+          <div class="radio-list" id="radioPopularList"></div>
+
+          <!-- API Stations -->
+          <div id="radioStationsSection" style="display: none">
+            <h3 class="radio-section-title" data-i18n="radioStations">
+              📡 محطات إذاعية
+            </h3>
+            <div class="radio-list" id="radioStationsList"></div>
+          </div>
+
+          <!-- Loading -->
+          <div class="radio-loading" id="radioLoading" style="display: none">
+            <span class="radio-loading-spinner"></span>
+            <span data-i18n="radioLoading">جاري التحميل...</span>
+          </div>
+        </div>
       </div>
 
       <!-- Custom Azkar Tab -->

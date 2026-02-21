@@ -1,6 +1,6 @@
 // ===== Popup Main Script (Modular) =====
 import { AZKAR_DATA, AZKAR_CATEGORIES } from "../data/azkar.js";
-import { ISLAMIC_EVENTS } from "../data/events.js";
+import { NAWAWI_HADITHS } from "../data/nawawi.js";
 import {
   toArabicNum,
   getTodayKey,
@@ -17,6 +17,7 @@ import {
   getAdhanAudioURL,
   API_CATEGORIES,
 } from "../js/azkar-api.js";
+import { getRadioData, getPopularReciters } from "../js/quran-radio.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   // ─── State ───
@@ -40,6 +41,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ─── Play All State (UI mirror of background state) ───
   let playAllActive = false;
 
+  // ─── Radio State ───
+  let currentRadioId = null;
+  let radioDataCache = null;
+
   // ─── Initialize ───
   await loadSettings();
   await loadAzkarFromAPI(); // Load API data first
@@ -50,8 +55,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadHijriDate();
   initCategoriesTab();
   initProgressTab();
-  initEventsTab();
+  initHadithTab();
   initCustomTab();
+  initRadioTab();
+  initHadith();
   initSettingsButton();
   initLanguageToggle();
 
@@ -78,6 +85,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           : "✅ All azkar played";
       showToast(doneText);
       resetPlayAllUI();
+    }
+    if (msg.type === "RADIO_STATE_UPDATE") {
+      updateRadioUIFromState(msg.state);
     }
   });
 
@@ -349,6 +359,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Apply i18n translations to all data-i18n elements
     applyTranslations(currentLang);
 
+    // Display toggles
+    const translitToggle = document.getElementById("showTransliterationToggle");
+    if (translitToggle)
+      translitToggle.checked = settings.showTransliteration !== false;
+    const translToggle = document.getElementById("showTranslationToggle");
+    if (translToggle) translToggle.checked = settings.showTranslation !== false;
+
     // Reminder toggle
     const reminderToggle = document.getElementById("reminderToggle");
     if (reminderToggle) reminderToggle.checked = settings.enabled !== false;
@@ -388,6 +405,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (tab.dataset.tab === "progress") refreshProgress();
         else if (tab.dataset.tab === "custom") loadCustomAzkar();
+        else if (tab.dataset.tab === "radio") loadRadioData();
       });
     });
   }
@@ -429,6 +447,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       .addEventListener("change", (e) => {
         settings.interval = parseInt(e.target.value);
         saveSettings();
+      });
+
+    // Display toggles for transliteration & translation
+    document
+      .getElementById("showTransliterationToggle")
+      .addEventListener("change", (e) => {
+        settings.showTransliteration = e.target.checked;
+        saveSettings();
+        if (currentDhikr) displayDhikr(currentDhikr);
+      });
+    document
+      .getElementById("showTranslationToggle")
+      .addEventListener("change", (e) => {
+        settings.showTranslation = e.target.checked;
+        saveSettings();
+        if (currentDhikr) displayDhikr(currentDhikr);
       });
   }
 
@@ -545,7 +579,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   function updateCounterUI() {
     const maxCount = currentDhikr ? currentDhikr.times || 1 : 1;
     const percent = Math.min(currentCount / maxCount, 1);
-    const circumference = 2 * Math.PI * 42;
+    const circumference = 2 * Math.PI * 29;
     const offset = circumference * (1 - percent);
 
     document.getElementById("counterText").textContent = toArabicNum(
@@ -695,6 +729,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const hasAudio = dhikr.audioUrl ? true : false;
       item.innerHTML = `
         <div class="azkar-item-arabic">${dhikr.arabic}</div>
+        ${settings.showTransliteration !== false && dhikr.transliteration ? `<div class="azkar-item-transliteration">${dhikr.transliteration}</div>` : ""}
         ${settings.showTranslation !== false && dhikr.translation ? `<div class="azkar-item-translation">${dhikr.translation}</div>` : ""}
         <div class="azkar-item-meta">
           <span>${t("sourcePrefix", currentLang)}${dhikr.source || ""}</span>
@@ -992,26 +1027,360 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ═══════════════════════════════════════════
-  // Events Tab
+  // Hadith Tab (40 Nawawi + API Categories)
   // ═══════════════════════════════════════════
 
-  function initEventsTab() {
-    const list = document.getElementById("eventsList");
+  const HADITH_TAB_API = "https://hadeethenc.com/api/v1";
+  const CATEGORY_ICONS = {
+    1: "📖", // Quran
+    2: "📜", // Hadith Sciences
+    3: "🕋", // Aqeedah
+    4: "⚖️", // Fiqh
+    5: "🌟", // Virtues
+    6: "📢", // Dawah
+    7: "🏛️", // Seerah
+  };
+
+  let hadithTabState = {
+    currentView: "nawawi",
+    categoriesCache: null,
+    categoryHadithsCache: {},
+    currentCategoryId: null,
+    currentCategoryTitle: "",
+    currentPage: 1,
+    totalPages: 1,
+    currentNawawiIndex: 0,
+    backStack: [],
+  };
+
+  function initHadithTab() {
+    // Sub-navigation buttons
+    document.querySelectorAll(".hadith-tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document
+          .querySelectorAll(".hadith-tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const view = btn.dataset.hadithView;
+        showHadithView(view);
+        // Lazy-load categories when user switches to categories view
+        if (view === "categories" && !hadithTabState.categoriesCache) {
+          loadHadithCategories();
+        }
+      });
+    });
+
+    // Render Nawawi list
+    renderNawawiList();
+
+    // Back buttons
+    document.getElementById("backToNawawi")?.addEventListener("click", () => {
+      showHadithView("nawawi");
+    });
+
+    document
+      .getElementById("backToHadithCategories")
+      ?.addEventListener("click", () => {
+        showHadithView("categories");
+      });
+
+    document
+      .getElementById("backToHadithList")
+      ?.addEventListener("click", () => {
+        showHadithView("categoryHadiths");
+      });
+
+    // Nawawi prev/next
+    document.getElementById("nawawiPrevBtn")?.addEventListener("click", () => {
+      if (hadithTabState.currentNawawiIndex > 0) {
+        hadithTabState.currentNawawiIndex--;
+        showNawawiDetail(hadithTabState.currentNawawiIndex);
+      }
+    });
+
+    document.getElementById("nawawiNextBtn")?.addEventListener("click", () => {
+      if (hadithTabState.currentNawawiIndex < NAWAWI_HADITHS.length - 1) {
+        hadithTabState.currentNawawiIndex++;
+        showNawawiDetail(hadithTabState.currentNawawiIndex);
+      }
+    });
+
+    // Pagination
+    document.getElementById("hadithPrevPage")?.addEventListener("click", () => {
+      if (hadithTabState.currentPage > 1) {
+        hadithTabState.currentPage--;
+        loadCategoryHadiths(
+          hadithTabState.currentCategoryId,
+          hadithTabState.currentPage,
+        );
+      }
+    });
+
+    document.getElementById("hadithNextPage")?.addEventListener("click", () => {
+      if (hadithTabState.currentPage < hadithTabState.totalPages) {
+        hadithTabState.currentPage++;
+        loadCategoryHadiths(
+          hadithTabState.currentCategoryId,
+          hadithTabState.currentPage,
+        );
+      }
+    });
+  }
+
+  function showHadithView(viewName) {
+    document.querySelectorAll("#hadithTab .hadith-view").forEach((v) => {
+      v.style.display = "none";
+      v.classList.remove("active");
+    });
+
+    const viewMap = {
+      nawawi: "nawawiView",
+      nawawiDetail: "nawawiDetailView",
+      categories: "categoriesView",
+      categoryHadiths: "categoryHadithsView",
+      hadithDetail: "hadithDetailView",
+    };
+
+    const el = document.getElementById(viewMap[viewName]);
+    if (el) {
+      el.style.display = "block";
+      el.classList.add("active");
+    }
+
+    // Update sub-nav active state
+    document.querySelectorAll(".hadith-tab-btn").forEach((btn) => {
+      btn.classList.remove("active");
+      if (
+        (viewName === "nawawi" || viewName === "nawawiDetail") &&
+        btn.dataset.hadithView === "nawawi"
+      ) {
+        btn.classList.add("active");
+      } else if (
+        (viewName === "categories" ||
+          viewName === "categoryHadiths" ||
+          viewName === "hadithDetail") &&
+        btn.dataset.hadithView === "categories"
+      ) {
+        btn.classList.add("active");
+      }
+    });
+
+    hadithTabState.currentView = viewName;
+  }
+
+  function renderNawawiList() {
+    const list = document.getElementById("nawawiList");
+    if (!list) return;
     list.innerHTML = "";
 
-    ISLAMIC_EVENTS.forEach((event) => {
-      const card = document.createElement("div");
-      card.className = "event-card";
-      card.innerHTML = `
-        <span class="event-icon">${event.icon}</span>
-        <div class="event-info">
-          <div class="event-name-ar">${event.nameAr}</div>
-          <div class="event-name-en">${event.nameEn}</div>
-          <div class="event-description">${event.description}</div>
-        </div>
+    NAWAWI_HADITHS.forEach((h, idx) => {
+      const item = document.createElement("div");
+      item.className = "nawawi-item";
+      const title =
+        currentLang === "fr"
+          ? h.titleFr || h.title
+          : currentLang === "en"
+            ? h.titleEn || h.title
+            : h.title;
+      item.innerHTML = `
+        <span class="nawawi-number">${h.number}</span>
+        <span class="nawawi-title">${title}</span>
       `;
-      list.appendChild(card);
+      item.addEventListener("click", () => {
+        hadithTabState.currentNawawiIndex = idx;
+        showNawawiDetail(idx);
+      });
+      list.appendChild(item);
     });
+  }
+
+  function showNawawiDetail(index) {
+    const hadith = NAWAWI_HADITHS[index];
+    if (!hadith) return;
+
+    const card = document.getElementById("nawawiDetailCard");
+    const title =
+      currentLang === "fr"
+        ? hadith.titleFr || hadith.title
+        : currentLang === "en"
+          ? hadith.titleEn || hadith.title
+          : hadith.title;
+
+    card.innerHTML = `
+      <div class="nawawi-detail-title">${hadith.number}. ${title}</div>
+      <div class="nawawi-detail-text">${hadith.arabic}</div>
+      <div class="nawawi-detail-meta">
+        <span>📜 ${hadith.narrator}</span>
+        <span>📖 ${hadith.source}</span>
+      </div>
+      ${hadith.explanation ? `<div class="nawawi-explanation"><strong>${t("hadithExplanation", currentLang)}:</strong><br>${hadith.explanation}</div>` : ""}
+    `;
+
+    // Update prev/next buttons
+    const prevBtn = document.getElementById("nawawiPrevBtn");
+    const nextBtn = document.getElementById("nawawiNextBtn");
+    if (prevBtn) prevBtn.disabled = index === 0;
+    if (nextBtn) nextBtn.disabled = index === NAWAWI_HADITHS.length - 1;
+
+    showHadithView("nawawiDetail");
+  }
+
+  async function loadHadithCategories() {
+    if (hadithTabState.categoriesCache) {
+      renderHadithCategories(hadithTabState.categoriesCache);
+      return;
+    }
+
+    const grid = document.getElementById("hadithCategoriesGrid");
+    if (!grid) return;
+    grid.innerHTML = `<div class="hadith-cat-loading"><div class="hadith-spinner"></div><span>${t("hadithLoading", currentLang)}</span></div>`;
+
+    try {
+      const lang = getHadithLang();
+      const res = await fetch(
+        `${HADITH_TAB_API}/categories/roots/?language=${lang}`,
+        { signal: AbortSignal.timeout(15000) },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const categories = await res.json();
+      hadithTabState.categoriesCache = categories;
+      renderHadithCategories(categories);
+    } catch (e) {
+      console.warn("[HadithTab] Failed to load categories:", e);
+      grid.innerHTML = `<div class="hadith-cat-loading"><span>⚠️ ${t("hadithError", currentLang)}</span><br><button class="back-btn" onclick="" id="retryCategoriesBtn" style="margin-top:8px">🔄 ${t("nextHadith", currentLang)}</button></div>`;
+      document
+        .getElementById("retryCategoriesBtn")
+        ?.addEventListener("click", () => {
+          hadithTabState.categoriesCache = null;
+          loadHadithCategories();
+        });
+    }
+  }
+
+  function renderHadithCategories(categories) {
+    const grid = document.getElementById("hadithCategoriesGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    categories.forEach((cat) => {
+      const card = document.createElement("div");
+      card.className = "hadith-cat-card";
+      const icon = CATEGORY_ICONS[cat.id] || "📁";
+      card.innerHTML = `
+        <div class="hadith-cat-icon">${icon}</div>
+        <div class="hadith-cat-name">${cat.title}</div>
+        <div class="hadith-cat-count">${cat.hadeeths_count} ${t("hadithCount", currentLang)}</div>
+      `;
+      card.addEventListener("click", () => {
+        hadithTabState.currentCategoryId = cat.id;
+        hadithTabState.currentCategoryTitle = cat.title;
+        hadithTabState.currentPage = 1;
+        document.getElementById("hadithCategoryTitle").textContent = cat.title;
+        loadCategoryHadiths(cat.id, 1);
+        showHadithView("categoryHadiths");
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  async function loadCategoryHadiths(categoryId, page = 1) {
+    const list = document.getElementById("hadithItemsList");
+    const loading = document.getElementById("hadithCatLoading");
+    const pagination = document.getElementById("hadithPagination");
+
+    if (list) list.innerHTML = "";
+    if (loading) loading.style.display = "flex";
+    if (pagination) pagination.style.display = "none";
+
+    try {
+      const lang = getHadithLang();
+      const res = await fetch(
+        `${HADITH_TAB_API}/hadeeths/list/?language=${lang}&category_id=${categoryId}&page=${page}&per_page=10`,
+        { signal: AbortSignal.timeout(15000) },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      if (loading) loading.style.display = "none";
+
+      if (!data.data || data.data.length === 0) {
+        list.innerHTML = `<div class="hadith-cat-loading"><span>لا توجد أحاديث</span></div>`;
+        return;
+      }
+
+      // Update pagination
+      const meta = data.meta || {};
+      hadithTabState.totalPages = meta.last_page || 1;
+      hadithTabState.currentPage = page;
+
+      if (hadithTabState.totalPages > 1 && pagination) {
+        pagination.style.display = "flex";
+        document.getElementById("hadithPageInfo").textContent =
+          `${page} / ${hadithTabState.totalPages}`;
+        document.getElementById("hadithPrevPage").disabled = page <= 1;
+        document.getElementById("hadithNextPage").disabled =
+          page >= hadithTabState.totalPages;
+      }
+
+      // Render hadith items
+      data.data.forEach((item) => {
+        const div = document.createElement("div");
+        div.className = "hadith-list-item";
+        div.innerHTML = `<div class="hadith-list-item-title">${item.title}</div>`;
+        div.addEventListener("click", () => {
+          loadSingleHadith(item.id);
+        });
+        list.appendChild(div);
+      });
+    } catch (e) {
+      console.warn("[HadithTab] Failed to load category hadiths:", e);
+      if (loading) loading.style.display = "none";
+      if (list)
+        list.innerHTML = `<div class="hadith-cat-loading"><span>⚠️ ${t("hadithError", currentLang)}</span></div>`;
+    }
+  }
+
+  async function loadSingleHadith(hadithId) {
+    const card = document.getElementById("hadithDetailCard");
+    if (!card) return;
+    card.innerHTML = `<div class="hadith-cat-loading"><div class="hadith-spinner"></div><span>${t("hadithLoading", currentLang)}</span></div>`;
+    showHadithView("hadithDetail");
+
+    try {
+      const lang = getHadithLang();
+      const res = await fetch(
+        `${HADITH_TAB_API}/hadeeths/one/?language=${lang}&id=${hadithId}`,
+        { signal: AbortSignal.timeout(15000) },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const hadith = await res.json();
+
+      let gradeClass = "";
+      const grade = (hadith.grade || "").toLowerCase();
+      if (grade.includes("صحيح") || grade.includes("sahih"))
+        gradeClass = "sahih";
+      else if (grade.includes("حسن") || grade.includes("hasan"))
+        gradeClass = "hasan";
+      else if (
+        grade.includes("ضعيف") ||
+        grade.includes("daif") ||
+        grade.includes("weak")
+      )
+        gradeClass = "daif";
+
+      card.innerHTML = `
+        <div class="hadith-detail-title">${hadith.title || ""}</div>
+        <div class="hadith-detail-text">${hadith.hadeeth || ""}</div>
+        <div class="hadith-detail-attribution">
+          ${hadith.attribution ? `📖 ${hadith.attribution}` : ""}
+          ${hadith.grade ? `<div class="hadith-detail-grade ${gradeClass}">${hadith.grade}</div>` : ""}
+        </div>
+        ${hadith.explanation ? `<div class="nawawi-detail-text" style="font-size:13px; margin-top:12px; padding-top:12px; border-top:1px solid var(--bg-secondary)"><strong>${t("hadithExplanation", currentLang)}:</strong><br>${hadith.explanation}</div>` : ""}
+      `;
+    } catch (e) {
+      console.warn("[HadithTab] Failed to load hadith detail:", e);
+      card.innerHTML = `<div class="hadith-cat-loading"><span>⚠️ ${t("hadithError", currentLang)}</span></div>`;
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -1223,6 +1592,329 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ═══════════════════════════════════════════
+  // Daily Hadith
+  // ═══════════════════════════════════════════
+
+  const HADITH_API = "https://hadeethenc.com/api/v1";
+  // Category IDs and their total page counts (from API meta)
+  const HADITH_CATEGORIES = [
+    { id: 1, pages: 40 }, // Quran sciences
+    { id: 3, pages: 145 }, // Aqeedah
+    { id: 4, pages: 364 }, // Fiqh
+    { id: 5, pages: 205 }, // Virtues & manners
+    { id: 6, pages: 28 }, // Dawah
+    { id: 7, pages: 71 }, // Seerah
+  ];
+
+  let hadithSeenIds = new Set();
+
+  function getHadithLang() {
+    if (currentLang === "ar" || currentLang === "ur") return "ar";
+    if (currentLang === "fr") return "fr";
+    return "en";
+  }
+
+  async function fetchRandomHadith(retries = 3) {
+    const loadingEl = document.getElementById("hadithLoading");
+    const contentEl = document.getElementById("hadithContent");
+    const errorEl = document.getElementById("hadithError");
+
+    if (loadingEl) loadingEl.style.display = "flex";
+    if (contentEl) contentEl.style.display = "none";
+    if (errorEl) errorEl.style.display = "none";
+
+    try {
+      const lang = getHadithLang();
+      // Pick a random category
+      const cat =
+        HADITH_CATEGORIES[Math.floor(Math.random() * HADITH_CATEGORIES.length)];
+      // Pick a random page within that category (1 hadith per page)
+      const page = Math.floor(Math.random() * cat.pages) + 1;
+
+      const response = await fetch(
+        `${HADITH_API}/hadeeths/list/?language=${lang}&category_id=${cat.id}&page=${page}&per_page=1`,
+        { signal: AbortSignal.timeout(15000) },
+      );
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+
+      if (!data.data || data.data.length === 0) throw new Error("empty");
+
+      const summary = data.data[0];
+
+      // Skip already seen hadiths (try up to 3 times)
+      if (hadithSeenIds.has(summary.id) && hadithSeenIds.size < 50) {
+        return fetchRandomHadith(retries);
+      }
+      hadithSeenIds.add(summary.id);
+
+      // Fetch full hadith details
+      const detailRes = await fetch(
+        `${HADITH_API}/hadeeths/one/?language=${lang}&id=${summary.id}`,
+        { signal: AbortSignal.timeout(15000) },
+      );
+
+      if (!detailRes.ok) throw new Error(`HTTP ${detailRes.status}`);
+      const hadith = await detailRes.json();
+
+      displayHadith(hadith);
+    } catch (e) {
+      console.warn("[Hadith] Fetch failed:", e, `(retries left: ${retries})`);
+      if (retries > 1) {
+        // Wait a bit before retrying
+        await new Promise((r) => setTimeout(r, 1000));
+        return fetchRandomHadith(retries - 1);
+      }
+      if (loadingEl) loadingEl.style.display = "none";
+      if (errorEl) errorEl.style.display = "flex";
+    }
+  }
+
+  function displayHadith(hadith) {
+    const loadingEl = document.getElementById("hadithLoading");
+    const contentEl = document.getElementById("hadithContent");
+    const textEl = document.getElementById("hadithText");
+    const attrEl = document.getElementById("hadithAttribution");
+    const gradeEl = document.getElementById("hadithGrade");
+
+    // Use hadeeth field (full text) or title as fallback
+    const text = hadith.hadeeth || hadith.title || "";
+    textEl.textContent = text;
+    attrEl.textContent = hadith.attribution ? `📖 ${hadith.attribution}` : "";
+    gradeEl.textContent = hadith.grade || "";
+
+    if (loadingEl) loadingEl.style.display = "none";
+    if (contentEl) contentEl.style.display = "block";
+  }
+
+  function initHadith() {
+    fetchRandomHadith();
+    const nextBtn = document.getElementById("nextHadithBtn");
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        fetchRandomHadith();
+      });
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // Quran Radio Tab
+  // ═══════════════════════════════════════════
+
+  function initRadioTab() {
+    // Volume controls
+    const volSlider = document.getElementById("radioVolume");
+    const volDown = document.getElementById("radioVolDown");
+    const volUp = document.getElementById("radioVolUp");
+    const stopBtn = document.getElementById("radioStopBtn");
+    const searchInput = document.getElementById("radioSearch");
+
+    if (volSlider) {
+      volSlider.addEventListener("input", () => {
+        const vol = volSlider.value / 100;
+        chrome.runtime.sendMessage({ type: "SET_RADIO_VOLUME", volume: vol });
+      });
+    }
+    if (volDown) {
+      volDown.addEventListener("click", () => {
+        if (volSlider) {
+          volSlider.value = Math.max(0, Number(volSlider.value) - 10);
+          volSlider.dispatchEvent(new Event("input"));
+        }
+      });
+    }
+    if (volUp) {
+      volUp.addEventListener("click", () => {
+        if (volSlider) {
+          volSlider.value = Math.min(100, Number(volSlider.value) + 10);
+          volSlider.dispatchEvent(new Event("input"));
+        }
+      });
+    }
+    if (stopBtn) {
+      stopBtn.addEventListener("click", () => {
+        chrome.runtime.sendMessage({ type: "STOP_RADIO" });
+        stopRadioUI();
+      });
+    }
+    if (searchInput) {
+      searchInput.addEventListener("input", () => {
+        filterRadioList(searchInput.value.trim());
+      });
+    }
+
+    // Render popular reciters immediately (offline-ready)
+    renderRadioList("radioPopularList", getPopularReciters(), true);
+
+    // Restore radio state from background (in case popup was reopened)
+    chrome.runtime.sendMessage({ type: "GET_RADIO_STATE" }, (state) => {
+      if (state && state.playing) {
+        currentRadioId = state.radioId;
+        updateRadioUIFromState(state);
+        // Re-render to highlight current station
+        renderRadioList("radioPopularList", getPopularReciters(), true);
+      }
+    });
+  }
+
+  function updateRadioUIFromState(state) {
+    if (!state) return;
+    const npBar = document.getElementById("radioNowPlaying");
+    const npName = document.getElementById("radioNpName");
+    const volSlider = document.getElementById("radioVolume");
+
+    if (state.playing) {
+      currentRadioId = state.radioId;
+      if (npBar) npBar.style.display = "block";
+      if (npName) npName.textContent = state.radioName || "---";
+      if (volSlider && state.volume != null)
+        volSlider.value = Math.round(state.volume * 100);
+
+      // Highlight playing item
+      document.querySelectorAll(".radio-item").forEach((el) => {
+        const isPlaying = String(el.dataset.radioId) === String(state.radioId);
+        el.classList.toggle("playing", isPlaying);
+        el.querySelector(".radio-item-play").textContent = isPlaying
+          ? "⏸"
+          : "▶";
+      });
+    } else {
+      stopRadioUI();
+    }
+  }
+
+  async function loadRadioData() {
+    if (radioDataCache) return; // Already loaded
+
+    const loadingEl = document.getElementById("radioLoading");
+    if (loadingEl) loadingEl.style.display = "flex";
+
+    try {
+      const data = await getRadioData(currentLang);
+      radioDataCache = data;
+
+      // Render API stations if available
+      if (data.stations && data.stations.length > 0) {
+        const stationsSection = document.getElementById("radioStationsSection");
+        if (stationsSection) stationsSection.style.display = "block";
+        renderRadioList("radioStationsList", data.stations, false);
+      }
+    } catch (e) {
+      console.warn("[Radio] Failed to load stations:", e);
+    } finally {
+      if (loadingEl) loadingEl.style.display = "none";
+    }
+  }
+
+  function renderRadioList(containerId, items, isPopular) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
+
+    items.forEach((item) => {
+      const el = document.createElement("div");
+      el.className = "radio-item";
+      el.dataset.radioId = item.id;
+      el.dataset.radioUrl = item.url;
+      el.dataset.radioName = isPopular
+        ? currentLang === "ar" || currentLang === "ur"
+          ? item.name_ar
+          : item.name_en
+        : item.name;
+      el.dataset.searchText = isPopular
+        ? `${item.name_ar} ${item.name_en}`.toLowerCase()
+        : item.name.toLowerCase();
+
+      if (currentRadioId === item.id) el.classList.add("playing");
+
+      const displayName = isPopular
+        ? currentLang === "ar" || currentLang === "ur"
+          ? item.name_ar
+          : item.name_en
+        : item.name;
+      const style = isPopular
+        ? currentLang === "ar" || currentLang === "ur"
+          ? item.style_ar
+          : item.style_en
+        : "";
+
+      el.innerHTML = `
+        <div class="radio-item-icon">${item.img || "📻"}</div>
+        <div class="radio-item-info">
+          <span class="radio-item-name">${displayName}</span>
+          ${style ? `<span class="radio-item-style">${style}</span>` : ""}
+        </div>
+        <button class="radio-item-play">${currentRadioId === item.id ? "⏸" : "▶"}</button>
+      `;
+
+      el.addEventListener("click", () => {
+        toggleRadioPlay(item.id, item.url, displayName, el);
+      });
+
+      container.appendChild(el);
+    });
+  }
+
+  function toggleRadioPlay(id, url, name, itemEl) {
+    // If same station is playing, stop it
+    if (currentRadioId === id) {
+      chrome.runtime.sendMessage({ type: "STOP_RADIO" });
+      stopRadioUI();
+      return;
+    }
+
+    currentRadioId = id;
+    const sliderVal = document.getElementById("radioVolume")?.value;
+    const volume = (sliderVal != null ? Number(sliderVal) : 80) / 100;
+
+    // Play via background → offscreen (persists after popup close)
+    chrome.runtime.sendMessage({
+      type: "PLAY_RADIO",
+      radioId: id,
+      url: url,
+      radioName: name,
+      volume: volume,
+    });
+
+    // Show now playing
+    const npBar = document.getElementById("radioNowPlaying");
+    const npName = document.getElementById("radioNpName");
+    if (npBar) npBar.style.display = "block";
+    if (npName) npName.textContent = name;
+
+    // Update UI for all items
+    document.querySelectorAll(".radio-item").forEach((el) => {
+      el.classList.remove("playing");
+      el.querySelector(".radio-item-play").textContent = "▶";
+    });
+    if (itemEl) {
+      itemEl.classList.add("playing");
+      itemEl.querySelector(".radio-item-play").textContent = "⏸";
+    }
+  }
+
+  function stopRadioUI() {
+    currentRadioId = null;
+
+    const npBar = document.getElementById("radioNowPlaying");
+    if (npBar) npBar.style.display = "none";
+
+    document.querySelectorAll(".radio-item").forEach((el) => {
+      el.classList.remove("playing");
+      el.querySelector(".radio-item-play").textContent = "▶";
+    });
+  }
+
+  function filterRadioList(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll(".radio-item").forEach((el) => {
+      const searchText = el.dataset.searchText || "";
+      el.style.display = !q || searchText.includes(q) ? "flex" : "none";
+    });
+  }
+
+  // ═══════════════════════════════════════════
   // Settings & Language
   // ═══════════════════════════════════════════
 
@@ -1245,6 +1937,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       buildCategoryChips();
       initCategoriesTab();
       if (currentDhikr) displayDhikr(currentDhikr);
+      // Re-render radio list with new language
+      renderRadioList("radioPopularList", getPopularReciters(), true);
+      radioDataCache = null; // Reset cache so API stations reload with new lang
       saveSettings();
     });
   }

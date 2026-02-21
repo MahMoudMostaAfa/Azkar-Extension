@@ -7,7 +7,6 @@
     "storage",
     "alarms",
     "notifications",
-    "contextMenus",
     "scripting",
     "activeTab",
     "offscreen",
@@ -15,7 +14,11 @@
   ],
   "host_permissions": [
     "https://api.aladhan.com/*",
-    "https://raw.githubusercontent.com/rn0x/Adhkar-json/*"
+    "https://raw.githubusercontent.com/rn0x/Adhkar-json/*",
+    "https://mp3quran.net/*",
+    "https://Qurango.net/*",
+    "https://backup.qurango.net/*",
+    "https://hadeethenc.com/*"
   ],
   "background": {
     "service_worker": "background/background.js",

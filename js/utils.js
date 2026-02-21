@@ -55,20 +55,6 @@ export function getNextMidnight() {
 }
 
 /**
- * Debounce a function call
- * @param {Function} fn
- * @param {number} delay
- * @returns {Function}
- */
-export function debounce(fn, delay = 300) {
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
-}
-
-/**
  * Show a toast notification in the popup
  * @param {string} message
  * @param {number} duration - ms
@@ -85,43 +71,6 @@ export function showToast(message, duration = 3000) {
   setTimeout(() => {
     if (toast.parentNode) toast.remove();
   }, duration);
-}
-
-/**
- * Get the Arabic name for a prayer
- * @param {string} prayer
- * @returns {string}
- */
-export function getPrayerNameAr(prayer) {
-  const names = {
-    fajr: "الفجر",
-    dhuhr: "الظهر",
-    asr: "العصر",
-    maghrib: "المغرب",
-    isha: "العشاء",
-  };
-  return names[prayer] || prayer;
-}
-
-/**
- * Get category label in Arabic
- * @param {string} category
- * @returns {string}
- */
-export function getCategoryLabelAr(category) {
-  const labels = {
-    morning: "أذكار الصباح",
-    evening: "أذكار المساء",
-    afterPrayer: "أذكار بعد الصلاة",
-    sleep: "أذكار النوم",
-    general: "أذكار عامة",
-    forgiveness: "أذكار الاستغفار",
-    protection: "أذكار الحماية",
-    dua: "الدعاء",
-    travel: "أذكار السفر",
-    food: "أذكار الطعام",
-  };
-  return labels[category] || "أذكار";
 }
 
 /**

@@ -374,20 +374,6 @@ function normalizeArabic(text) {
 }
 
 /**
- * Force refresh azkar data from API (bypass cache)
- * @param {Object} [localFallback] - Local AZKAR_DATA
- * @returns {Promise<{ data: Object, categories: Object, source: string }>}
- */
-export async function refreshAzkarData(localFallback = null) {
-  try {
-    await chrome.storage.local.remove(CACHE_KEY);
-  } catch (e) {
-    // ignore
-  }
-  return getAzkarData(localFallback);
-}
-
-/**
  * Get the adhan category audio URL (for prayer-time adhan sound)
  * @returns {Promise<string>} URL to adhan audio file
  */

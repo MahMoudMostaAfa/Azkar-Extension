@@ -14,7 +14,8 @@ export const UI_TRANSLATIONS = {
     tabHome: "🏠 Home",
     tabCategories: "📂 Categories",
     tabProgress: "📊 Progress",
-    tabEvents: "🕌 Events",
+    tabHadith: "📜 Hadiths",
+    tabRadio: "📻 Radio",
     tabCustom: "✏️ Custom",
 
     // Prayer times
@@ -41,6 +42,11 @@ export const UI_TRANSLATIONS = {
 
     // Quick browse
     quickBrowse: "Quick Browse",
+
+    // Display options
+    displayOptions: "👁️ Display Options",
+    showTransliteration: "📝 Show Transliteration",
+    showTranslation: "🌐 Show Translation",
 
     // Reminder
     autoReminder: "🔔 Auto Reminder",
@@ -75,8 +81,19 @@ export const UI_TRANSLATIONS = {
     last7Days: "Last 7 Days",
     tipsTitle: "💡 Tips for Spiritual Growth",
 
-    // Events
-    islamicEvents: "🕌 Islamic Events",
+    // Hadith Tab
+    nawawiTitle: "📖 40 Nawawi",
+    hadithCategories: "📂 Hadith Categories",
+    nawawiSubtitle: "40 Nawawi Hadiths",
+    nawawiDesc:
+      "A collection by Imam Nawawi of hadiths encompassing the foundations of Islam",
+    backToNawawi: "→ Back to list",
+    backToCategories: "→ Back to categories",
+    backToList: "→ Back to list",
+    hadithCount: "hadiths",
+    hadithExplanation: "Explanation",
+    prevPage: "← Previous",
+    nextPage: "Next →",
 
     // Custom Azkar
     customAzkar: "✏️ Custom Azkar",
@@ -129,6 +146,20 @@ export const UI_TRANSLATIONS = {
     todayInsight: "Well done! You completed {count} azkar today. ",
     startInsight: "Start your day with Azkar! ",
 
+    // Radio
+    radioPopular: "⭐ Popular Reciters",
+    radioStations: "📡 Radio Stations",
+    radioSearchPlaceholder: "Search for a reciter...",
+    radioLive: "Live Stream",
+    radioStop: "⏹ Stop",
+    radioLoading: "Loading...",
+
+    // Hadith
+    hadithTitle: "📜 Daily Hadith",
+    hadithLoading: "Loading...",
+    hadithError: "Could not load hadith",
+    nextHadith: "🔄 Another Hadith",
+
     // Source prefix
     sourcePrefix: "📖 ",
     repeatPrefix: "🔁 ",
@@ -143,7 +174,8 @@ export const UI_TRANSLATIONS = {
     tabHome: "🏠 الرئيسية",
     tabCategories: "📂 التصنيفات",
     tabProgress: "📊 التقدم",
-    tabEvents: "🕌 المناسبات",
+    tabHadith: "📜 الأحاديث",
+    tabRadio: "📻 إذاعة",
     tabCustom: "✏️ مخصص",
 
     // Prayer times
@@ -170,6 +202,11 @@ export const UI_TRANSLATIONS = {
 
     // Quick browse
     quickBrowse: "تصفح سريع",
+
+    // Display options
+    displayOptions: "👁️ خيارات العرض",
+    showTransliteration: "📝 إظهار النطق",
+    showTranslation: "🌐 إظهار الترجمة",
 
     // Reminder
     autoReminder: "🔔 التذكير التلقائي",
@@ -204,8 +241,18 @@ export const UI_TRANSLATIONS = {
     last7Days: "آخر ٧ أيام",
     tipsTitle: "💡 نصائح للتطور الروحي",
 
-    // Events
-    islamicEvents: "🕌 المناسبات الإسلامية",
+    // Hadith Tab
+    nawawiTitle: "📖 الأربعون النووية",
+    hadithCategories: "📂 تصنيفات الأحاديث",
+    nawawiSubtitle: "الأربعون النووية",
+    nawawiDesc: "مجموعة الإمام النووي من الأحاديث الجامعة لأصول الدين",
+    backToNawawi: "→ العودة للقائمة",
+    backToCategories: "→ العودة للتصنيفات",
+    backToList: "→ العودة للقائمة",
+    hadithCount: "حديث",
+    hadithExplanation: "الشرح",
+    prevPage: "→ السابق",
+    nextPage: "التالي ←",
 
     // Custom Azkar
     customAzkar: "✏️ أذكار مخصصة",
@@ -257,6 +304,20 @@ export const UI_TRANSLATIONS = {
     todayInsight: "أحسنت! أكملت {count} أذكار اليوم. ",
     startInsight: "ابدأ يومك بالأذكار! ",
 
+    // Radio
+    radioPopular: "⭐ القراء المشهورون",
+    radioStations: "📡 محطات إذاعية",
+    radioSearchPlaceholder: "ابحث عن قارئ...",
+    radioLive: "بث مباشر",
+    radioStop: "⏹ إيقاف",
+    radioLoading: "جاري التحميل...",
+
+    // Hadith
+    hadithTitle: "📜 حديث اليوم",
+    hadithLoading: "جاري التحميل...",
+    hadithError: "تعذر تحميل الحديث",
+    nextHadith: "🔄 حديث آخر",
+
     // Source prefix
     sourcePrefix: "📖 ",
     repeatPrefix: "🔁 ",
@@ -268,7 +329,8 @@ export const UI_TRANSLATIONS = {
     tabHome: "🏠 Accueil",
     tabCategories: "📂 Catégories",
     tabProgress: "📊 Progrès",
-    tabEvents: "🕌 Événements",
+    tabHadith: "📜 Hadiths",
+    tabRadio: "📻 Radio",
     tabCustom: "✏️ Personnalisé",
     fajr: "Fajr",
     dhuhr: "Dhuhr",
@@ -287,6 +349,11 @@ export const UI_TRANSLATIONS = {
     share: "📤 Partager",
     nextDhikr: "➡️ Dhikr suivant",
     quickBrowse: "Parcourir",
+    // Display options
+    displayOptions: "👁️ Options d'affichage",
+    showTransliteration: "📝 Afficher la translittération",
+    showTranslation: "🌐 Afficher la traduction",
+
     autoReminder: "🔔 Rappel automatique",
     every: "Chaque:",
     min2: "2 minutes",
@@ -314,7 +381,18 @@ export const UI_TRANSLATIONS = {
     consecutiveDays: "Jours consécutifs",
     last7Days: "7 derniers jours",
     tipsTitle: "💡 Conseils de croissance spirituelle",
-    islamicEvents: "🕌 Événements islamiques",
+    nawawiTitle: "📖 40 Nawawi",
+    hadithCategories: "📂 Catégories de Hadiths",
+    nawawiSubtitle: "Les 40 Hadiths de Nawawi",
+    nawawiDesc:
+      "Une collection de l'Imam Nawawi de hadiths englobant les fondements de l'Islam",
+    backToNawawi: "← Retour à la liste",
+    backToCategories: "← Retour aux catégories",
+    backToList: "← Retour à la liste",
+    hadithCount: "hadiths",
+    hadithExplanation: "Explication",
+    prevPage: "← Précédent",
+    nextPage: "Suivant →",
     customAzkar: "✏️ Azkar personnalisés",
     arabicText: "Texte arabe",
     writeHere: "Écrivez le dhikr ici...",
@@ -351,6 +429,20 @@ export const UI_TRANSLATIONS = {
     streakInsight: "🎉 Masha'Allah ! Vous êtes régulier depuis {count} jours. ",
     todayInsight: "Bravo ! Vous avez complété {count} azkar aujourd'hui. ",
     startInsight: "Commencez votre journée avec les Azkar ! ",
+    // Radio
+    radioPopular: "⭐ Récitateurs populaires",
+    radioStations: "📡 Stations de radio",
+    radioSearchPlaceholder: "Rechercher un récitateur...",
+    radioLive: "En direct",
+    radioStop: "⏹ Arrêter",
+    radioLoading: "Chargement...",
+
+    // Hadith
+    hadithTitle: "📜 Hadith du jour",
+    hadithLoading: "Chargement...",
+    hadithError: "Impossible de charger le hadith",
+    nextHadith: "🔄 Autre hadith",
+
     sourcePrefix: "📖 ",
     repeatPrefix: "🔁 ",
   },
@@ -361,7 +453,8 @@ export const UI_TRANSLATIONS = {
     tabHome: "🏠 ہوم",
     tabCategories: "📂 زمرے",
     tabProgress: "📊 پیشرفت",
-    tabEvents: "🕌 تقریبات",
+    tabHadith: "📜 احادیث",
+    tabRadio: "📻 ریڈیو",
     tabCustom: "✏️ مخصوص",
     fajr: "فجر",
     dhuhr: "ظہر",
@@ -380,6 +473,11 @@ export const UI_TRANSLATIONS = {
     share: "📤 شیئر",
     nextDhikr: "⬅️ اگلا ذکر",
     quickBrowse: "فوری براؤز",
+    // Display options
+    displayOptions: "👁️ ڈسپلے آپشنز",
+    showTransliteration: "📝 تلفظ دکھائیں",
+    showTranslation: "🌐 ترجمہ دکھائیں",
+
     autoReminder: "🔔 خودکار یاددہانی",
     every: "ہر:",
     min2: "٢ منٹ",
@@ -407,7 +505,17 @@ export const UI_TRANSLATIONS = {
     consecutiveDays: "مسلسل دن",
     last7Days: "پچھلے ٧ دن",
     tipsTitle: "💡 روحانی ترقی کے مشورے",
-    islamicEvents: "🕌 اسلامی تقریبات",
+    nawawiTitle: "📖 چالیس نووی",
+    hadithCategories: "📂 احادیث کے زمرے",
+    nawawiSubtitle: "چالیس نووی احادیث",
+    nawawiDesc: "امام نووی کا مجموعہ جو دین کے اصولوں پر مشتمل ہے",
+    backToNawawi: "→ فہرست پر واپس",
+    backToCategories: "→ زمروں پر واپس",
+    backToList: "→ فہرست پر واپس",
+    hadithCount: "احادیث",
+    hadithExplanation: "تشریح",
+    prevPage: "→ پچھلا",
+    nextPage: "اگلا ←",
     customAzkar: "✏️ مخصوص اذکار",
     arabicText: "عربی متن",
     writeHere: "یہاں ذکر لکھیں...",
@@ -442,6 +550,20 @@ export const UI_TRANSLATIONS = {
     streakInsight: "🎉 ماشاء اللہ! آپ {count} دنوں سے مسلسل ہیں۔ ",
     todayInsight: "شاباش! آج آپ نے {count} اذکار مکمل کیے۔ ",
     startInsight: "اپنا دن اذکار سے شروع کریں! ",
+    // Radio
+    radioPopular: "⭐ مشہور قاری",
+    radioStations: "📡 ریڈیو اسٹیشنز",
+    radioSearchPlaceholder: "قاری تلاش کریں...",
+    radioLive: "براہ راست",
+    radioStop: "⏹ بند کریں",
+    radioLoading: "لوڈ ہو رہا ہے...",
+
+    // Hadith
+    hadithTitle: "📜 آج کی حدیث",
+    hadithLoading: "لوڈ ہو رہا ہے...",
+    hadithError: "حدیث لوڈ نہیں ہو سکی",
+    nextHadith: "🔄 اور حدیث",
+
     sourcePrefix: "📖 ",
     repeatPrefix: "🔁 ",
   },

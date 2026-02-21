@@ -4,6 +4,12 @@
 
 import { AZKAR_DATA } from "../data/azkar.js";
 import { getAzkarData, getAdhanAudioURL } from "../js/azkar-api.js";
+import {
+  getTodayKey,
+  getWeekKey,
+  getMonthKey,
+  getNextMidnight,
+} from "../js/utils.js";
 
 // ─── API Azkar Data Cache (in-memory) ───
 let cachedAzkarData = null;
@@ -22,6 +28,15 @@ let audioState = {
   playAllList: [], // [{audioUrl, arabic, originalIdx}, ...]
   playAllCategoryKey: "",
   singlePlayDhikrIdx: -1,
+};
+
+// Radio state persisted in chrome.storage.session
+let radioState = {
+  playing: false,
+  radioId: null,
+  radioUrl: "",
+  radioName: "",
+  volume: 0.8,
 };
 
 // ─── Persist / Restore audioState to survive SW shutdown ───
@@ -44,8 +59,28 @@ async function restoreAudioState() {
   }
 }
 
+async function saveRadioState() {
+  try {
+    await chrome.storage.session.set({ _radioState: radioState });
+  } catch (e) {
+    // session storage not available
+  }
+}
+
+async function restoreRadioState() {
+  try {
+    const data = await chrome.storage.session.get("_radioState");
+    if (data._radioState) {
+      radioState = data._radioState;
+    }
+  } catch (e) {
+    // first run or not available
+  }
+}
+
 // Restore state immediately on SW startup
 restoreAudioState();
+restoreRadioState();
 
 async function ensureOffscreen() {
   // Check if offscreen document already exists (handles service worker restart)
@@ -130,6 +165,79 @@ async function stopInOffscreen() {
     });
   } catch (e) {
     // ignore
+  }
+}
+
+// ─── Radio offscreen helpers ───
+
+async function playRadioInOffscreen(url, volume) {
+  if (!(await ensureOffscreen())) return false;
+  try {
+    await chrome.runtime.sendMessage({
+      target: "offscreen",
+      action: "play_radio",
+      url,
+      volume,
+    });
+    return true;
+  } catch (e) {
+    console.warn("[Radio] Offscreen play error:", e);
+    return false;
+  }
+}
+
+async function stopRadioInOffscreen() {
+  try {
+    await chrome.runtime.sendMessage({
+      target: "offscreen",
+      action: "stop_radio",
+    });
+  } catch (e) {
+    // ignore
+  }
+}
+
+async function setRadioVolumeInOffscreen(volume) {
+  try {
+    await chrome.runtime.sendMessage({
+      target: "offscreen",
+      action: "set_radio_volume",
+      volume,
+    });
+  } catch (e) {
+    // ignore
+  }
+}
+
+function broadcastRadioState() {
+  broadcastMessage({
+    type: "RADIO_STATE_UPDATE",
+    state: {
+      playing: radioState.playing,
+      radioId: radioState.radioId,
+      radioName: radioState.radioName,
+      volume: radioState.volume,
+    },
+  });
+}
+
+async function handleOffscreenRadioEvent(msg) {
+  await restoreRadioState();
+  switch (msg.event) {
+    case "started":
+      radioState.playing = true;
+      await saveRadioState();
+      broadcastRadioState();
+      break;
+    case "ended":
+    case "error":
+      radioState.playing = false;
+      radioState.radioId = null;
+      radioState.radioName = "";
+      radioState.radioUrl = "";
+      await saveRadioState();
+      broadcastRadioState();
+      break;
   }
 }
 
@@ -294,36 +402,7 @@ const DEFAULT_SETTINGS = {
 };
 
 // ─────────────────────────────────────────────
-// Section 2: Utility Helpers
-// ─────────────────────────────────────────────
-
-function getTodayKey() {
-  return new Date().toISOString().split("T")[0];
-}
-
-function getWeekKey() {
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const weekNumber = Math.ceil(
-    ((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7,
-  );
-  return `${now.getFullYear()}-W${weekNumber}`;
-}
-
-function getMonthKey() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function getNextMidnight() {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-  return tomorrow.getTime();
-}
-
-// ─────────────────────────────────────────────
-// Section 3: Alarm Setup & Management
+// Section 2: Alarm Setup & Management
 // ─────────────────────────────────────────────
 
 /**
@@ -552,6 +631,22 @@ async function handleAzkarReminder(forceTest = false) {
       if (!visible) showBrowserNotification(dhikr);
     } catch (_) {
       showBrowserNotification(dhikr);
+    }
+  }
+
+  // Play audio recitation if audioEnabled and dhikr has an audio URL
+  if (settings.audioEnabled && dhikr.audioUrl) {
+    try {
+      audioState.singlePlayDhikrIdx = -1;
+      audioState.playing = true;
+      await saveAudioState();
+      broadcastAudioState();
+      await playInOffscreen(dhikr.audioUrl);
+      console.log("[Azkar] Audio recitation started for reminder dhikr");
+    } catch (e) {
+      console.warn("[Azkar] Failed to play audio recitation for reminder:", e);
+      audioState.playing = false;
+      await saveAudioState();
     }
   }
 }
@@ -1252,6 +1347,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleOffscreenAudioEvent(message);
       break;
 
+    case "OFFSCREEN_RADIO_EVENT":
+      handleOffscreenRadioEvent(message);
+      break;
+
     case "OFFSCREEN_READY":
       offscreenDocReady = true;
       break;
@@ -1305,6 +1404,68 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             audioState.playAllList[audioState.playAllIndex]
               ? audioState.playAllList[audioState.playAllIndex].originalIdx
               : -1,
+        });
+      })();
+      return true;
+
+    // ─── Quran Radio Commands ───
+
+    case "PLAY_RADIO":
+      (async () => {
+        // Stop any azkar audio first
+        audioState.playing = false;
+        audioState.singlePlayDhikrIdx = -1;
+        await stopInOffscreen();
+        await saveAudioState();
+        broadcastAudioState();
+
+        // Stop currently playing radio before starting new one
+        await stopRadioInOffscreen();
+
+        // Set radio state
+        radioState.playing = true;
+        radioState.radioId = message.radioId;
+        radioState.radioUrl = message.url;
+        radioState.radioName = message.radioName || "";
+        radioState.volume = message.volume ?? radioState.volume;
+        await saveRadioState();
+        broadcastRadioState();
+
+        await playRadioInOffscreen(message.url, radioState.volume);
+        sendResponse({ success: true });
+      })();
+      return true;
+
+    case "STOP_RADIO":
+      (async () => {
+        radioState.playing = false;
+        radioState.radioId = null;
+        radioState.radioUrl = "";
+        radioState.radioName = "";
+        await stopRadioInOffscreen();
+        await saveRadioState();
+        broadcastRadioState();
+        sendResponse({ success: true });
+      })();
+      return true;
+
+    case "SET_RADIO_VOLUME":
+      (async () => {
+        radioState.volume = message.volume ?? 0.8;
+        await saveRadioState();
+        await setRadioVolumeInOffscreen(radioState.volume);
+        sendResponse({ success: true });
+      })();
+      return true;
+
+    case "GET_RADIO_STATE":
+      (async () => {
+        await restoreRadioState();
+        sendResponse({
+          playing: radioState.playing,
+          radioId: radioState.radioId,
+          radioName: radioState.radioName,
+          volume: radioState.volume,
         });
       })();
       return true;
